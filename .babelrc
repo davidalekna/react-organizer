@@ -1,0 +1,19 @@
+{
+  "presets": [
+    ["@babel/preset-env", { "modules": false }],
+    "@babel/preset-react"
+  ],
+  "plugins": [
+    "@babel/plugin-proposal-logical-assignment-operators",
+    "@babel/plugin-proposal-class-properties",
+    "@babel/plugin-syntax-object-rest-spread"
+  ],
+  "env": {
+    "development": {
+      "ignore": ["**/__mocks__", "**/__tests__", "**/*.test.js"]
+    },
+    "test": {
+      "presets": ["@babel/preset-env"]
+    }
+  }
+}
