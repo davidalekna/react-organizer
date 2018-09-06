@@ -1,26 +1,26 @@
 export const days = [
-  'Monday',
-  'Tuesday',
-  'Wednesday',
-  'Thursday',
-  'Friday',
-  'Saturday',
-  'Sunday',
+  { num: 1, name: 'Monday' },
+  { num: 2, name: 'Tuesday' },
+  { num: 3, name: 'Wednesday' },
+  { num: 4, name: 'Thursday' },
+  { num: 5, name: 'Friday' },
+  { num: 6, name: 'Saturday' },
+  { num: 7, name: 'Sunday' },
 ];
 
 export const months = [
-  'January',
-  'February',
-  'March',
-  'April',
-  'May',
-  'June',
-  'July',
-  'August',
-  'September',
-  'October',
-  'November',
-  'December',
+  { num: 1, name: 'January' },
+  { num: 2, name: 'February' },
+  { num: 3, name: 'March' },
+  { num: 4, name: 'April' },
+  { num: 5, name: 'May' },
+  { num: 6, name: 'June' },
+  { num: 7, name: 'July' },
+  { num: 8, name: 'August' },
+  { num: 9, name: 'September' },
+  { num: 10, name: 'October' },
+  { num: 11, name: 'November' },
+  { num: 12, name: 'December' },
 ];
 
 // 1. Should be able to show offsets if required, otherwise not.
@@ -31,7 +31,7 @@ export const months = [
 const EventExample = [
   {
     id: 123,
-    title: 'Some Event Title',
+    title: 'make that soup already!',
     location: 'location address',
     starts: new Date().getTime(),
     ends: new Date().getTime(),
@@ -44,15 +44,29 @@ const EventExample = [
 ];
 
 const expectedFinalOutput = {
+  prev: {
+    name: 'August',
+    month: 8,
+    days: [
+      { name: 'Sunday', day: 26, events: [] },
+      { name: 'Monday', day: 27, events: [] },
+      { name: 'Tuesday', day: 28, events: [] },
+      { name: 'Wednesday', day: 29, events: [] },
+      { name: 'Thursday', day: 30, events: [] },
+      { name: 'Friday', day: 31, events: [] },
+    ],
+  },
   current: {
     name: 'September',
+    month: 9,
     year: 2018,
+    week: 2, // current week
     weeks: {
-      '1': [
+      1: [
         { name: 'Saturday', day: 1, events: [] },
         { name: 'Sunday', day: 2, events: [] },
       ],
-      '2': [
+      2: [
         { name: 'Monday', day: 3, events: [] },
         { name: 'Tuesday', day: 4, events: [] },
         { name: 'Wednesday', day: 5, events: [] },
@@ -61,7 +75,7 @@ const expectedFinalOutput = {
         { name: 'Saturday', day: 8, events: [] },
         { name: 'Sunday', day: 9, events: [] },
       ],
-      '3': [
+      3: [
         { name: 'Monday', day: 10, events: [] },
         { name: 'Tuesday', day: 11, events: [] },
         { name: 'Wednesday', day: 12, events: [] },
@@ -70,7 +84,7 @@ const expectedFinalOutput = {
         { name: 'Saturday', day: 15, events: [] },
         { name: 'Sunday', day: 16, events: [] },
       ],
-      '4': [
+      4: [
         { name: 'Monday', day: 17, events: [] },
         { name: 'Tuesday', day: 18, events: [] },
         { name: 'Wednesday', day: 19, events: [] },
@@ -79,7 +93,7 @@ const expectedFinalOutput = {
         { name: 'Saturday', day: 22, events: [] },
         { name: 'Sunday', day: 23, events: [] },
       ],
-      '5': [
+      5: [
         { name: 'Monday', day: 24, events: [] },
         { name: 'Tuesday', day: 25, events: [] },
         { name: 'Wednesday', day: 26, events: [] },
@@ -92,19 +106,9 @@ const expectedFinalOutput = {
     totalDays: 31,
     totalWeeks: 5,
   },
-  prev: {
-    name: 'August',
-    days: [
-      { name: 'Sunday', day: 26, events: [] },
-      { name: 'Monday', day: 27, events: [] },
-      { name: 'Tuesday', day: 28, events: [] },
-      { name: 'Wednesday', day: 29, events: [] },
-      { name: 'Thursday', day: 30, events: [] },
-      { name: 'Friday', day: 31, events: [] },
-    ],
-  },
   next: {
     name: 'October',
+    month: 10,
     days: [
       { name: 'Monday', day: 1, events: [] },
       { name: 'Tuesday', day: 2, events: [] },
