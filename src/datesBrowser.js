@@ -1,6 +1,7 @@
 import React from 'react';
 import PropTypes from 'prop-types';
 import hoistNonReactStatics from 'hoist-non-react-statics';
+import { days, months } from './utils';
 
 const DatesBrowserContext = React.createContext({});
 
@@ -9,10 +10,80 @@ export class DatesBrowser extends React.Component {
   static defaultProps = {
     stateReducer: (state, changes) => changes,
     onStateChange: () => {},
+    initialDays: days,
+    initialMonths: months,
+    initialEvents: [],
   };
   static stateChangeTypes = {};
   static Consumer = DatesBrowserContext.Consumer;
-  initialState = {};
+
+  getWeeksInAMonth = (month, year) => {
+    const weeks = [];
+    const firstDate = new Date(year, month, 1);
+    const lastDate = new Date(year, month + 1, 0);
+    const numDays = lastDate.getDate();
+    let start = 1;
+    let end = 7 - firstDate.getDay();
+    while (start <= numDays) {
+      weeks.push({ start, end });
+      start = end + 1;
+      end = end + 7;
+      if (end > numDays) end = numDays;
+    }
+    return weeks;
+  };
+  getCurrentMonth(key) {
+    return this.state.months[key];
+  }
+  getNumberOfDaysInAMonth(m, Y) {
+    return new Date(Y, m + 1, 0).getDate();
+  }
+  getToday = () => new Date().getDate() - 1;
+  currentMonthNo = () => new Date().getMonth();
+  currentYear = () => new Date().getFullYear();
+  getDays = () => {
+    //
+    let daysInPrevMonth = this.getNumberOfDaysInAMonth(month - 1, year) + 1;
+    let daysInCurrentMonth = this.getNumberOfDaysInAMonth(month, year);
+    //
+    const getLastWeek = this.getWeeksInAMonth(month - 1, year).pop();
+    const prevMonthWeekDays = getLastWeek.end - getLastWeek.start;
+    const firstWeek = [];
+    const currentMonth = [];
+    const lastWeek = [];
+    //
+    for (let i = 0; i < prevMonthWeekDays; i += 1) {
+      firstWeek.push({
+        day: (daysInPrevMonth -= 1),
+        offset: true,
+      });
+    }
+    for (let i = 0; i < daysInCurrentMonth; i += 1) {
+      currentMonth.push({
+        day: i + 1,
+        today: currentDay === i ? true : false,
+      });
+    }
+    const totalBlocks = 42 - (firstWeek.length + currentMonth.length);
+    for (let i = 0; i < totalBlocks; i += 1) {
+      lastWeek.push({
+        day: i + 1,
+        offset: true,
+      });
+    }
+    //
+    return [
+      ...firstWeek.sort((a, b) => a.day - b.day),
+      ...currentMonth,
+      ...lastWeek,
+    ];
+  };
+
+  initialState = {
+    days: this.props.initialDays,
+    months: this.props.initialMonths,
+    events: this.props.initialEvents,
+  };
   state = this.initialState;
   isControlledProp(key) {
     return this.props[key] !== undefined;
