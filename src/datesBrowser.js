@@ -6,7 +6,17 @@ import { days, months } from './utils';
 const DatesBrowserContext = React.createContext({});
 
 export class DatesBrowser extends React.Component {
-  static propTypes = {};
+  static propTypes = {
+    children: PropTypes.func,
+    initialDays: PropTypes.array,
+    initialMonths: PropTypes.array,
+    initialEvents: PropTypes.arrayOf(
+      PropTypes.shape({
+        starts: PropTypes.string.isRequired,
+        ends: PropTypes.string.isRequired,
+      }),
+    ),
+  };
   static defaultProps = {
     stateReducer: (state, changes) => changes,
     onStateChange: () => {},

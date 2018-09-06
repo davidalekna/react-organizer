@@ -37,6 +37,9 @@ const EventExample = [
     ends: new Date().getTime(),
     allDay: true,
     overlap: true,
+    color: '#b342f4',
+    createdBy: 'Username',
+    calendar: 'Reminders',
   },
 ];
 
