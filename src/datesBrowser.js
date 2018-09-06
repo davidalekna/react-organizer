@@ -16,7 +16,19 @@ export class DatesBrowser extends React.Component {
   };
   static stateChangeTypes = {};
   static Consumer = DatesBrowserContext.Consumer;
-
+  //
+  changeDaysLanguage = () => [];
+  changeMonthsLanguage = () => [];
+  initializeEvents = events => {
+    // events will be an array of objects
+    // each object will have <starts> : <ends>
+    // will have to determin if start : end range includes currently selected month
+    // if it does then will have to map over constructed month object and plant events in days
+  };
+  eventInsert = () => {};
+  eventUpdate = () => {};
+  eventDelete = () => {};
+  //
   getWeeksInAMonth = (month, year) => {
     const weeks = [];
     const firstDate = new Date(year, month, 1);
@@ -78,11 +90,10 @@ export class DatesBrowser extends React.Component {
       ...lastWeek,
     ];
   };
-
+  //
   initialState = {
     days: this.props.initialDays,
     months: this.props.initialMonths,
-    events: this.props.initialEvents,
   };
   state = this.initialState;
   isControlledProp(key) {
