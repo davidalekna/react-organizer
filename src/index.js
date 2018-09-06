@@ -1,3 +1,3 @@
-import { DatesBrowser, withDatesBrowser } from './dataBrowser';
+import { DatesBrowser, withDatesBrowser } from './datesBrowser';
 
 export { DatesBrowser as default, withDatesBrowser };
