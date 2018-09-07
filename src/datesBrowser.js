@@ -65,16 +65,26 @@ export class DatesBrowser extends React.Component {
   getCurrentYear = () => new Date().getFullYear();
   // Construct callendar
   getPrevMonthOffset = ({ month, year }) => {
-    const prevMonthNumber = month - 2; // months are 0 indexed
-    const { end, start } = this.getWeeksInAMonth(prevMonthNumber, year).pop();
-    let totalDays = this.getNumberOfDaysInAMonth(prevMonthNumber, year) + 1;
+    let prevMonthNumber = month - 2;
+    let currentYear = year;
+    if (prevMonthNumber < 0) {
+      // check if previews year
+      prevMonthNumber = 11;
+      currentYear = currentYear - 1;
+    }
+    const { end, start } = this.getWeeksInAMonth(
+      prevMonthNumber,
+      currentYear,
+    ).pop();
+    let totalDays =
+      this.getNumberOfDaysInAMonth(prevMonthNumber, currentYear) + 1;
     const assignDays = Array(end - start)
       .fill({})
       .map(() => {
         const currentDay = (totalDays -= 1);
         return {
           name: this.state.days[
-            new Date(year, prevMonthNumber, currentDay).getDay()
+            new Date(currentYear, prevMonthNumber, currentDay).getDay()
           ],
           day: currentDay,
           offset: true,
@@ -85,6 +95,7 @@ export class DatesBrowser extends React.Component {
     return {
       name: this.getMonthByNumber(prevMonthNumber),
       month: prevMonthNumber + 1,
+      year: currentYear,
       totalOffsetDays: assignDays.length,
       days: assignDays,
     };
@@ -98,7 +109,7 @@ export class DatesBrowser extends React.Component {
       year,
       totalDays,
       totalWeeks: this.getWeeksInAMonth(currentMonth, year).length,
-      weeks: Array(totalDays)
+      days: Array(totalDays)
         .fill({})
         .map((u, i) => {
           const currentDay = i + 1;
@@ -107,61 +118,62 @@ export class DatesBrowser extends React.Component {
               new Date(year, currentMonth, currentDay).getDay()
             ],
             day: currentDay,
-            offset: false,
             today: today === i,
             events: [],
           };
         }),
     };
   };
-  getNextMonthOffset = ({ month, year }) => {
-    // TODO LAST
-    // const totalBlocks = this.state.gridBlocks - (firstWeek.length + currentMonth.length);
-    // for (let i = 0; i < totalBlocks; i += 1) {
-    //   lastWeek.push({
-    //     day: i + 1,
-    //     offset: true,
-    //   });
-    // }
-    // return
+  getNextMonthOffset = ({ month, year, totalOffsetDays, totalDays }) => {
+    let currentMonth = month;
+    let currentYear = year;
+    if (currentMonth > 11) {
+      // check if next year
+      currentMonth = 0;
+      currentYear = currentYear + 1;
+    }
+    const nextMonthOffset = this.state.gridBlocks - totalOffsetDays - totalDays;
+    const assignDays = Array(nextMonthOffset)
+      .fill({})
+      .map((c, i) => {
+        const currentDay = i + 1;
+        return {
+          name: this.state.days[
+            new Date(currentYear, currentMonth, currentDay).getDay()
+          ],
+          day: currentDay,
+          offset: true,
+          events: [],
+        };
+      });
+    return {
+      name: this.getMonthByNumber(currentMonth),
+      month: currentMonth + 1,
+      year: currentYear,
+      totalOffsetDays: assignDays.length,
+      days: assignDays,
+    };
   };
-
-  getDays = ({ month, year }) => {
-    //
-    let daysInPrevMonth = this.getNumberOfDaysInAMonth(month - 1, year) + 1;
-    let daysInCurrentMonth = this.getNumberOfDaysInAMonth(month, year);
-    //
-    const getLastWeek = this.getWeeksInAMonth(month - 1, year).pop();
-    const prevMonthWeekDays = getLastWeek.end - getLastWeek.start;
-    const firstWeek = [];
-    const currentMonth = [];
-    const lastWeek = [];
-    //
-    for (let i = 0; i < prevMonthWeekDays; i += 1) {
-      firstWeek.push({
-        day: (daysInPrevMonth -= 1),
-        offset: true,
-      });
-    }
-    for (let i = 0; i < daysInCurrentMonth; i += 1) {
-      currentMonth.push({
-        day: i + 1,
-        today: currentDay === i ? true : false,
-      });
-    }
-    const totalBlocks = 42 - (firstWeek.length + currentMonth.length);
-    for (let i = 0; i < totalBlocks; i += 1) {
-      lastWeek.push({
-        day: i + 1,
-        offset: true,
-      });
-    }
-    //
-    return [
-      ...firstWeek.sort((a, b) => a.day - b.day),
-      ...currentMonth,
-      ...lastWeek,
-    ];
+  getFullMonth = ({ month, year }) => {
+    const firstOffset = this.getPrevMonthOffset({ month, year });
+    const current = this.getCurrentMonth({ month, year });
+    const nextOffset = this.getNextMonthOffset({
+      month,
+      year,
+      totalOffsetDays: firstOffset.totalOffsetDays,
+      totalDays: current.totalDays,
+    });
+    return {
+      prev: firstOffset,
+      current: current,
+      next: nextOffset,
+    };
+  };
+  getFullCalendarYear = ({ year }) => {
+    const [first, ...rest] = Array(13)
+      .fill({})
+      .map((u, month) => this.getFullMonth({ month, year }));
+    return rest;
   };
   //
   initialState = {
@@ -176,6 +188,8 @@ export class DatesBrowser extends React.Component {
     getPrevMonthOffset: this.getPrevMonthOffset,
     getNextMonthOffset: this.getNextMonthOffset,
     getCurrentMonth: this.getCurrentMonth,
+    getFullMonth: this.getFullMonth,
+    getFullCalendarYear: this.getFullCalendarYear,
   };
   state = this.initialState;
   isControlledProp(key) {
