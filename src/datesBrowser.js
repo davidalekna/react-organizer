@@ -15,8 +15,6 @@ export class DatesBrowser extends React.Component {
     initialEvents: PropTypes.arrayOf(
       PropTypes.shape({
         starts: PropTypes.instanceOf(Date).isRequired,
-        ends: PropTypes.instanceOf(Date).isRequired,
-        allDay: PropTypes.bool.isRequired,
       }),
     ),
   };
@@ -35,20 +33,11 @@ export class DatesBrowser extends React.Component {
   changeDaysLanguage = () => [];
   changeMonthsLanguage = () => [];
   initializeEvents = forDate => {
-    // TODO
     const getDate = d => format(d, 'dd/MM/yyyy');
     const currentDate = getDate(forDate);
-
-    const stuff = this.getState().events.map(event => {
-      const { starts, ends, allDay } = event;
-      const mStarts = getDate(starts);
-      const mEnds = getDate(ends);
-      return mStarts === currentDate;
-    });
-
-    stuff.includes(true) && console.log(true);
-
-    return [];
+    return this.getState().events.filter(
+      ({ starts }) => getDate(starts) === currentDate,
+    );
   };
   eventInsert = () => {};
   eventUpdate = () => {};
@@ -103,7 +92,11 @@ export class DatesBrowser extends React.Component {
           ],
           day: currentDay,
           offset: true,
-          events: [],
+          events: this.initializeEvents(
+            currentYear,
+            prevMonthNumber,
+            currentDay,
+          ),
         };
       })
       .reverse();
@@ -161,7 +154,7 @@ export class DatesBrowser extends React.Component {
           ],
           day: currentDay,
           offset: true,
-          events: [],
+          events: this.initializeEvents(currentYear, currentMonth, currentDay),
         };
       });
     return {

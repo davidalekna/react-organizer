@@ -41,7 +41,17 @@ Object {
     },
     Object {
       "day": 7,
-      "events": Array [],
+      "events": Array [
+        Object {
+          "calendar": "Reminders",
+          "color": "#b342f4",
+          "createdBy": "Username",
+          "id": 123,
+          "location": "location address",
+          "starts": 2018-09-07T09:50:47.083Z,
+          "title": "make that soup already!",
+        },
+      ],
       "name": "Friday",
       "today": false,
     },
@@ -2466,7 +2476,17 @@ Array [
         },
         Object {
           "day": 7,
-          "events": Array [],
+          "events": Array [
+            Object {
+              "calendar": "Reminders",
+              "color": "#b342f4",
+              "createdBy": "Username",
+              "id": 123,
+              "location": "location address",
+              "starts": 2018-09-07T09:50:47.083Z,
+              "title": "make that soup already!",
+            },
+          ],
           "name": "Friday",
           "today": false,
         },
@@ -3585,7 +3605,17 @@ Object {
       },
       Object {
         "day": 7,
-        "events": Array [],
+        "events": Array [
+          Object {
+            "calendar": "Reminders",
+            "color": "#b342f4",
+            "createdBy": "Username",
+            "id": 123,
+            "location": "location address",
+            "starts": 2018-09-07T09:50:47.083Z,
+            "title": "make that soup already!",
+          },
+        ],
         "name": "Friday",
         "today": false,
       },
