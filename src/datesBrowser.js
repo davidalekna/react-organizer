@@ -1,7 +1,9 @@
 import React from 'react';
 import PropTypes from 'prop-types';
 import hoistNonReactStatics from 'hoist-non-react-statics';
+import { format, eachDayOfInterval } from 'date-fns';
 import { days, months } from './utils';
+import { EventExample } from './utils';
 
 const DatesBrowserContext = React.createContext({});
 
@@ -12,8 +14,9 @@ export class DatesBrowser extends React.Component {
     initialMonths: PropTypes.array,
     initialEvents: PropTypes.arrayOf(
       PropTypes.shape({
-        starts: PropTypes.string.isRequired,
-        ends: PropTypes.string.isRequired,
+        starts: PropTypes.instanceOf(Date).isRequired,
+        ends: PropTypes.instanceOf(Date).isRequired,
+        allDay: PropTypes.bool.isRequired,
       }),
     ),
   };
@@ -22,18 +25,30 @@ export class DatesBrowser extends React.Component {
     onStateChange: () => {},
     initialDays: days,
     initialMonths: months,
-    initialEvents: [],
+    initialEvents: EventExample,
+    initialDate: new Date(),
+    initialGridBlocks: 42,
   };
   static stateChangeTypes = {};
   static Consumer = DatesBrowserContext.Consumer;
   //
   changeDaysLanguage = () => [];
   changeMonthsLanguage = () => [];
-  initializeEvents = events => {
-    // events will be an array of objects
-    // each object will have <starts> : <ends>
-    // will have to determin if start : end range includes currently selected month
-    // if it does then will have to map over constructed month object and plant events in days
+  initializeEvents = forDate => {
+    // TODO
+    const getDate = d => format(d, 'dd/MM/yyyy');
+    const currentDate = getDate(forDate);
+
+    const stuff = this.getState().events.map(event => {
+      const { starts, ends, allDay } = event;
+      const mStarts = getDate(starts);
+      const mEnds = getDate(ends);
+      return mStarts === currentDate;
+    });
+
+    stuff.includes(true) && console.log(true);
+
+    return [];
   };
   eventInsert = () => {};
   eventUpdate = () => {};
@@ -55,7 +70,7 @@ export class DatesBrowser extends React.Component {
     return weeks;
   };
   getMonthByNumber(number) {
-    return this.state.months[number];
+    return this.getState().months[number];
   }
   getNumberOfDaysInAMonth(month, year) {
     return new Date(year, month + 1, 0).getDate();
@@ -83,7 +98,7 @@ export class DatesBrowser extends React.Component {
       .map(() => {
         const currentDay = (totalDays -= 1);
         return {
-          name: this.state.days[
+          name: this.getState().days[
             new Date(currentYear, prevMonthNumber, currentDay).getDay()
           ],
           day: currentDay,
@@ -114,12 +129,14 @@ export class DatesBrowser extends React.Component {
         .map((u, i) => {
           const currentDay = i + 1;
           return {
-            name: this.state.days[
+            name: this.getState().days[
               new Date(year, currentMonth, currentDay).getDay()
             ],
             day: currentDay,
             today: today === i,
-            events: [],
+            events: this.initializeEvents(
+              new Date(year, currentMonth, currentDay),
+            ),
           };
         }),
     };
@@ -132,13 +149,14 @@ export class DatesBrowser extends React.Component {
       currentMonth = 0;
       currentYear = currentYear + 1;
     }
-    const nextMonthOffset = this.state.gridBlocks - totalOffsetDays - totalDays;
+    const nextMonthOffset =
+      this.getState().gridBlocks - totalOffsetDays - totalDays;
     const assignDays = Array(nextMonthOffset)
       .fill({})
       .map((c, i) => {
         const currentDay = i + 1;
         return {
-          name: this.state.days[
+          name: this.getState().days[
             new Date(currentYear, currentMonth, currentDay).getDay()
           ],
           day: currentDay,
@@ -179,11 +197,9 @@ export class DatesBrowser extends React.Component {
   initialState = {
     days: this.props.initialDays,
     months: this.props.initialMonths,
-    gridBlocks: 42,
-    //
-    prevOffset: {},
-    current: {},
-    nextOffset: {},
+    events: this.props.initialEvents,
+    gridBlocks: this.props.initialGridBlocks,
+    date: this.props.initialDate,
     // functions
     getPrevMonthOffset: this.getPrevMonthOffset,
     getNextMonthOffset: this.getNextMonthOffset,

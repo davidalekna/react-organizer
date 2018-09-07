@@ -28,13 +28,13 @@ export const months = [
 // 3. Events should optionally exist in case user selects a year so we dont have to
 // overload with data.
 
-const EventExample = [
+export const EventExample = [
   {
     id: 123,
     title: 'make that soup already!',
     location: 'location address',
-    starts: new Date().getTime(),
-    ends: new Date().getTime(),
+    starts: new Date(),
+    ends: new Date(),
     allDay: true,
     overlap: true,
     color: '#b342f4',
