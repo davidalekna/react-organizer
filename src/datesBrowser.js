@@ -1,7 +1,14 @@
 import React from 'react';
 import PropTypes from 'prop-types';
 import hoistNonReactStatics from 'hoist-non-react-statics';
-import { format, eachDayOfInterval } from 'date-fns';
+import {
+  format,
+  getYear,
+  getMonth,
+  addMonths,
+  subMonths,
+  eachDayOfInterval,
+} from 'date-fns';
 import { days, months } from './utils';
 import { EventExample } from './utils';
 
@@ -12,7 +19,7 @@ export class DatesBrowser extends React.Component {
     children: PropTypes.func,
     initialDays: PropTypes.array,
     initialMonths: PropTypes.array,
-    initialEvents: PropTypes.arrayOf(
+    events: PropTypes.arrayOf(
       PropTypes.shape({
         starts: PropTypes.instanceOf(Date).isRequired,
       }),
@@ -23,7 +30,7 @@ export class DatesBrowser extends React.Component {
     onStateChange: () => {},
     initialDays: days,
     initialMonths: months,
-    initialEvents: EventExample,
+    events: [],
     initialDate: new Date(),
     initialGridBlocks: 42,
   };
@@ -35,7 +42,7 @@ export class DatesBrowser extends React.Component {
   initializeEvents = forDate => {
     const getDate = d => format(d, 'dd/MM/yyyy');
     const currentDate = getDate(forDate);
-    return this.getState().events.filter(
+    return this.props.events.filter(
       ({ starts }) => getDate(starts) === currentDate,
     );
   };
@@ -91,6 +98,7 @@ export class DatesBrowser extends React.Component {
             new Date(currentYear, prevMonthNumber, currentDay).getDay()
           ],
           day: currentDay,
+          date: new Date(currentYear, prevMonthNumber, currentDay),
           offset: true,
           events: this.initializeEvents(
             currentYear,
@@ -126,6 +134,7 @@ export class DatesBrowser extends React.Component {
               new Date(year, currentMonth, currentDay).getDay()
             ],
             day: currentDay,
+            date: new Date(year, currentMonth, currentDay),
             today: today === i,
             events: this.initializeEvents(
               new Date(year, currentMonth, currentDay),
@@ -153,6 +162,7 @@ export class DatesBrowser extends React.Component {
             new Date(currentYear, currentMonth, currentDay).getDay()
           ],
           day: currentDay,
+          date: new Date(currentYear, currentMonth, currentDay),
           offset: true,
           events: this.initializeEvents(currentYear, currentMonth, currentDay),
         };
@@ -165,7 +175,9 @@ export class DatesBrowser extends React.Component {
       days: assignDays,
     };
   };
-  getFullMonth = ({ month, year }) => {
+  getFullMonth = () => {
+    const year = getYear(this.getState().date);
+    const month = getMonth(this.getState().date) + 1;
     const firstOffset = this.getPrevMonthOffset({ month, year });
     const current = this.getCurrentMonth({ month, year });
     const nextOffset = this.getNextMonthOffset({
@@ -175,22 +187,37 @@ export class DatesBrowser extends React.Component {
       totalDays: current.totalDays,
     });
     return {
-      prev: firstOffset,
-      current: current,
-      next: nextOffset,
+      ...current,
+      days: [...firstOffset.days, ...current.days, ...nextOffset.days],
     };
   };
-  getFullCalendarYear = ({ year }) => {
+  getFullCalendarYear = () => {
+    const year = getYear(this.getState().date);
     const [first, ...rest] = Array(13)
       .fill({})
       .map((u, month) => this.getFullMonth({ month, year }));
     return rest;
   };
   //
+  addCalendarMonth = ({ type = '__add_calendar_month__' }) => {
+    this.internalSetState(state => ({
+      type,
+      date: addMonths(state.date, 1),
+    }));
+  };
+  subCalendarMonth = ({ type = '__sub_calendar_month__' }) => {
+    this.internalSetState(state => ({
+      type,
+      date: subMonths(state.date, 1),
+    }));
+  };
+  selectDate = ({ type = '__select_day__', date }) => {
+    this.internalSetState({ type, date });
+  };
+  //
   initialState = {
     days: this.props.initialDays,
     months: this.props.initialMonths,
-    events: this.props.initialEvents,
     gridBlocks: this.props.initialGridBlocks,
     date: this.props.initialDate,
     // functions
@@ -199,6 +226,9 @@ export class DatesBrowser extends React.Component {
     getCurrentMonth: this.getCurrentMonth,
     getFullMonth: this.getFullMonth,
     getFullCalendarYear: this.getFullCalendarYear,
+    addCalendarMonth: this.addCalendarMonth,
+    subCalendarMonth: this.subCalendarMonth,
+    selectDate: this.selectDate,
   };
   state = this.initialState;
   isControlledProp(key) {
