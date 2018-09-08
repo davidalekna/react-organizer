@@ -12,7 +12,20 @@ import {
 import { days, months } from './utils';
 import { EventExample } from './utils';
 
-const DatesBrowserContext = React.createContext({});
+const DatesBrowserContext = React.createContext({
+  days: [],
+  months: [],
+  date: new Date(),
+  // functions
+  getPrevMonthOffset: () => {},
+  getNextMonthOffset: () => {},
+  getCurrentMonth: () => {},
+  getFullMonth: () => {},
+  getFullCalendarYear: () => {},
+  addCalendarMonth: () => {},
+  subCalendarMonth: () => {},
+  selectDate: () => {},
+});
 
 export class DatesBrowser extends React.Component {
   static propTypes = {
