@@ -7,6 +7,7 @@ import {
   getMonth,
   addMonths,
   subMonths,
+  isSameMonth,
   eachDayOfInterval,
 } from 'date-fns';
 import { days, months } from './utils';
@@ -41,13 +42,18 @@ export class DatesBrowser extends React.Component {
   static defaultProps = {
     stateReducer: (state, changes) => changes,
     onStateChange: () => {},
+    onReset: () => {},
     initialDays: days,
     initialMonths: months,
     events: [],
-    initialDate: new Date(),
     initialGridBlocks: 42,
   };
-  static stateChangeTypes = {};
+  static stateChangeTypes = {
+    addCalendarMonth: '__add_calendar_month__',
+    subCalendarMonth: '__subtract_calendar_month__',
+    selectDate: '__select_date__',
+    reset: '__reset__',
+  };
   static Consumer = DatesBrowserContext.Consumer;
   //
   changeDaysLanguage = () => [];
@@ -129,9 +135,11 @@ export class DatesBrowser extends React.Component {
       days: assignDays,
     };
   };
-  getCurrentMonth = ({ month, year, today }) => {
+  getCurrentMonth = ({ month, year }) => {
     const currentMonth = month - 1;
     const totalDays = this.getNumberOfDaysInAMonth(currentMonth, year);
+    const isToday =
+      isSameMonth(this.getState().date, new Date()) && new Date().getDate() - 1;
     return {
       name: this.getMonthByNumber(currentMonth),
       month,
@@ -140,15 +148,15 @@ export class DatesBrowser extends React.Component {
       totalWeeks: this.getWeeksInAMonth(currentMonth, year).length,
       days: Array(totalDays)
         .fill({})
-        .map((u, i) => {
-          const currentDay = i + 1;
+        .map((u, day) => {
+          const currentDay = day + 1;
           return {
             name: this.getState().days[
               new Date(year, currentMonth, currentDay).getDay()
             ],
             day: currentDay,
             date: new Date(year, currentMonth, currentDay),
-            today: today === i,
+            today: isToday === day,
             events: this.initializeEvents(
               new Date(year, currentMonth, currentDay),
             ),
@@ -212,27 +220,37 @@ export class DatesBrowser extends React.Component {
     return rest;
   };
   //
-  addCalendarMonth = ({ type = '__add_calendar_month__' }) => {
+  addCalendarMonth = ({
+    type = DatesBrowser.stateChangeTypes.addCalendarMonth,
+  }) => {
     this.internalSetState(state => ({
       type,
       date: addMonths(state.date, 1),
     }));
   };
-  subCalendarMonth = ({ type = '__sub_calendar_month__' }) => {
+  subCalendarMonth = ({
+    type = DatesBrowser.stateChangeTypes.subCalendarMonth,
+  }) => {
     this.internalSetState(state => ({
       type,
       date: subMonths(state.date, 1),
     }));
   };
-  selectDate = ({ type = '__select_day__', date }) => {
+  selectDate = ({ type = DatesBrowser.stateChangeTypes.selectDate, date }) => {
     this.internalSetState({ type, date });
+  };
+  reset = () => {
+    this.internalSetState(
+      { ...this.initialState, type: DatesBrowser.stateChangeTypes.reset },
+      () => this.props.onReset(this.getState().date),
+    );
   };
   //
   initialState = {
     days: this.props.initialDays,
     months: this.props.initialMonths,
     gridBlocks: this.props.initialGridBlocks,
-    date: this.props.initialDate,
+    date: new Date(),
     // functions
     getPrevMonthOffset: this.getPrevMonthOffset,
     getNextMonthOffset: this.getNextMonthOffset,
@@ -242,6 +260,7 @@ export class DatesBrowser extends React.Component {
     addCalendarMonth: this.addCalendarMonth,
     subCalendarMonth: this.subCalendarMonth,
     selectDate: this.selectDate,
+    reset: this.reset,
   };
   state = this.initialState;
   isControlledProp(key) {
