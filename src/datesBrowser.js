@@ -9,9 +9,12 @@ import {
   subMonths,
   isSameMonth,
   eachDayOfInterval,
+  addYears,
+  subYears,
 } from 'date-fns';
 import { days, months } from './utils';
 import { EventExample } from './utils';
+import { zhCN } from 'date-fns/locale';
 
 const DatesBrowserContext = React.createContext({
   days: [],
@@ -22,7 +25,6 @@ const DatesBrowserContext = React.createContext({
   getNextMonthOffset: () => {},
   getCurrentMonth: () => {},
   getFullMonth: () => {},
-  getFullCalendarYear: () => {},
   addCalendarMonth: () => {},
   subCalendarMonth: () => {},
   selectDate: () => {},
@@ -53,6 +55,8 @@ export class DatesBrowser extends React.Component {
     subCalendarMonth: '__subtract_calendar_month__',
     selectDate: '__select_date__',
     reset: '__reset__',
+    addCalendarYear: '__add_calendar_year__',
+    subCalendarYear: '__sub_calendar_year__',
   };
   static Consumer = DatesBrowserContext.Consumer;
   //
@@ -138,8 +142,9 @@ export class DatesBrowser extends React.Component {
   getCurrentMonth = ({ month, year }) => {
     const currentMonth = month - 1;
     const totalDays = this.getNumberOfDaysInAMonth(currentMonth, year);
+    const today = new Date().getDate() - 1;
     const isToday =
-      isSameMonth(this.getState().date, new Date()) && new Date().getDate() - 1;
+      isSameMonth(new Date(year, currentMonth, today), new Date()) && today;
     return {
       name: this.getMonthByNumber(currentMonth),
       month,
@@ -196,9 +201,9 @@ export class DatesBrowser extends React.Component {
       days: assignDays,
     };
   };
-  getFullMonth = () => {
+  getFullMonth = initMonth => {
+    const month = initMonth ? initMonth : getMonth(this.getState().date) + 1;
     const year = getYear(this.getState().date);
-    const month = getMonth(this.getState().date) + 1;
     const firstOffset = this.getPrevMonthOffset({ month, year });
     const current = this.getCurrentMonth({ month, year });
     const nextOffset = this.getNextMonthOffset({
@@ -212,14 +217,6 @@ export class DatesBrowser extends React.Component {
       days: [...firstOffset.days, ...current.days, ...nextOffset.days],
     };
   };
-  getFullCalendarYear = () => {
-    const year = getYear(this.getState().date);
-    const [first, ...rest] = Array(13)
-      .fill({})
-      .map((u, month) => this.getFullMonth({ month, year }));
-    return rest;
-  };
-  //
   addCalendarMonth = ({
     type = DatesBrowser.stateChangeTypes.addCalendarMonth,
   }) => {
@@ -234,6 +231,22 @@ export class DatesBrowser extends React.Component {
     this.internalSetState(state => ({
       type,
       date: subMonths(state.date, 1),
+    }));
+  };
+  addCalendarYear = ({
+    type = DatesBrowser.stateChangeTypes.addCalendarYear,
+  }) => {
+    this.internalSetState(state => ({
+      type,
+      date: addYears(state.date, 1),
+    }));
+  };
+  subCalendarYear = ({
+    type = DatesBrowser.stateChangeTypes.subCalendarYear,
+  }) => {
+    this.internalSetState(state => ({
+      type,
+      date: subYears(state.date, 1),
     }));
   };
   selectDate = ({ type = DatesBrowser.stateChangeTypes.selectDate, date }) => {
@@ -256,9 +269,10 @@ export class DatesBrowser extends React.Component {
     getNextMonthOffset: this.getNextMonthOffset,
     getCurrentMonth: this.getCurrentMonth,
     getFullMonth: this.getFullMonth,
-    getFullCalendarYear: this.getFullCalendarYear,
     addCalendarMonth: this.addCalendarMonth,
     subCalendarMonth: this.subCalendarMonth,
+    addCalendarYear: this.addCalendarYear,
+    subCalendarYear: this.subCalendarYear,
     selectDate: this.selectDate,
     reset: this.reset,
   };
