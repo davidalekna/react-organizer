@@ -225,12 +225,10 @@ export class DatesBrowser extends React.Component {
     };
   };
   getFullYear = events => {
-    console.time('getFullYear');
     const months = Array(13)
       .fill({})
       .map((u, month) => this.getFullMonth(month, events));
     months.shift();
-    console.timeEnd('getFullYear');
     return months;
   };
   addCalendarMonth = ({
