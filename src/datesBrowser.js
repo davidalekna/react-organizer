@@ -99,7 +99,7 @@ export class DatesBrowser extends React.Component {
   getCurrentMonthNumber = () => new Date().getMonth();
   getCurrentYear = () => new Date().getFullYear();
   // Construct callendar
-  getPrevMonthOffset = ({ month, year }) => {
+  getPrevMonthOffset = ({ month, year, events }) => {
     let prevMonthNumber = month - 2;
     let currentYear = year;
     if (prevMonthNumber < 0) {
@@ -124,11 +124,9 @@ export class DatesBrowser extends React.Component {
           day: currentDay,
           date: new Date(currentYear, prevMonthNumber, currentDay),
           offset: true,
-          events: this.initializeEvents(
-            currentYear,
-            prevMonthNumber,
-            currentDay,
-          ),
+          events:
+            events &&
+            this.initializeEvents(currentYear, prevMonthNumber, currentDay),
         };
       })
       .reverse();
@@ -140,7 +138,7 @@ export class DatesBrowser extends React.Component {
       days: assignDays,
     };
   };
-  getCurrentMonth = ({ month, year }) => {
+  getCurrentMonth = ({ month, year, events }) => {
     const currentMonth = month - 1;
     const totalDays = this.getNumberOfDaysInAMonth(currentMonth, year);
     const today = new Date().getDate() - 1;
@@ -163,14 +161,20 @@ export class DatesBrowser extends React.Component {
             day: currentDay,
             date: new Date(year, currentMonth, currentDay),
             today: isToday === day,
-            events: this.initializeEvents(
-              new Date(year, currentMonth, currentDay),
-            ),
+            events:
+              events &&
+              this.initializeEvents(new Date(year, currentMonth, currentDay)),
           };
         }),
     };
   };
-  getNextMonthOffset = ({ month, year, totalOffsetDays, totalDays }) => {
+  getNextMonthOffset = ({
+    month,
+    year,
+    totalOffsetDays,
+    totalDays,
+    events,
+  }) => {
     let currentMonth = month;
     let currentYear = year;
     if (currentMonth > 11) {
@@ -191,7 +195,9 @@ export class DatesBrowser extends React.Component {
           day: currentDay,
           date: new Date(currentYear, currentMonth, currentDay),
           offset: true,
-          events: this.initializeEvents(currentYear, currentMonth, currentDay),
+          events:
+            events &&
+            this.initializeEvents(currentYear, currentMonth, currentDay),
         };
       });
     return {
@@ -202,14 +208,15 @@ export class DatesBrowser extends React.Component {
       days: assignDays,
     };
   };
-  getFullMonth = initMonth => {
+  getFullMonth = (initMonth, events) => {
     const month = initMonth ? initMonth : getMonth(this.getState().date) + 1;
     const year = getYear(this.getState().date);
-    const firstOffset = this.getPrevMonthOffset({ month, year });
-    const current = this.getCurrentMonth({ month, year });
+    const firstOffset = this.getPrevMonthOffset({ month, year, events });
+    const current = this.getCurrentMonth({ month, year, events });
     const nextOffset = this.getNextMonthOffset({
       month,
       year,
+      events,
       totalOffsetDays: firstOffset.totalOffsetDays,
       totalDays: current.totalDays,
     });
@@ -218,35 +225,13 @@ export class DatesBrowser extends React.Component {
       days: [...firstOffset.days, ...current.days, ...nextOffset.days],
     };
   };
-  asyncGetFullMonth = initMonth => {
-    return new Promise(resolve => {
-      setTimeout(() => {
-        const month = initMonth
-          ? initMonth
-          : getMonth(this.getState().date) + 1;
-        const year = getYear(this.getState().date);
-        const firstOffset = this.getPrevMonthOffset({ month, year });
-        const current = this.getCurrentMonth({ month, year });
-        const nextOffset = this.getNextMonthOffset({
-          month,
-          year,
-          totalOffsetDays: firstOffset.totalOffsetDays,
-          totalDays: current.totalDays,
-        });
-        resolve({
-          ...current,
-          days: [...firstOffset.days, ...current.days, ...nextOffset.days],
-        });
-      }, 1);
-    });
-  };
-  getFullYear = async () => {
-    const months = await Promise.all(
-      Array(13)
-        .fill({})
-        .map(async (u, month) => await this.asyncGetFullMonth(month)),
-    );
+  getFullYear = events => {
+    console.time('getFullYear');
+    const months = Array(13)
+      .fill({})
+      .map((u, month) => this.getFullMonth(month, events));
     months.shift();
+    console.timeEnd('getFullYear');
     return months;
   };
   addCalendarMonth = ({
