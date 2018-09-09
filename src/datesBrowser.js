@@ -1,3 +1,4 @@
+import '@babel/polyfill';
 import React from 'react';
 import PropTypes from 'prop-types';
 import hoistNonReactStatics from 'hoist-non-react-statics';
@@ -217,6 +218,37 @@ export class DatesBrowser extends React.Component {
       days: [...firstOffset.days, ...current.days, ...nextOffset.days],
     };
   };
+  asyncGetFullMonth = initMonth => {
+    return new Promise(resolve => {
+      setTimeout(() => {
+        const month = initMonth
+          ? initMonth
+          : getMonth(this.getState().date) + 1;
+        const year = getYear(this.getState().date);
+        const firstOffset = this.getPrevMonthOffset({ month, year });
+        const current = this.getCurrentMonth({ month, year });
+        const nextOffset = this.getNextMonthOffset({
+          month,
+          year,
+          totalOffsetDays: firstOffset.totalOffsetDays,
+          totalDays: current.totalDays,
+        });
+        resolve({
+          ...current,
+          days: [...firstOffset.days, ...current.days, ...nextOffset.days],
+        });
+      }, 1);
+    });
+  };
+  getFullYear = async () => {
+    const months = await Promise.all(
+      Array(13)
+        .fill({})
+        .map(async (u, month) => await this.asyncGetFullMonth(month)),
+    );
+    months.shift();
+    return months;
+  };
   addCalendarMonth = ({
     type = DatesBrowser.stateChangeTypes.addCalendarMonth,
   }) => {
@@ -269,6 +301,7 @@ export class DatesBrowser extends React.Component {
     getNextMonthOffset: this.getNextMonthOffset,
     getCurrentMonth: this.getCurrentMonth,
     getFullMonth: this.getFullMonth,
+    getFullYear: this.getFullYear,
     addCalendarMonth: this.addCalendarMonth,
     subCalendarMonth: this.subCalendarMonth,
     addCalendarYear: this.addCalendarYear,
@@ -334,7 +367,7 @@ export function withDatesBrowser(Component) {
     return (
       <DatesBrowser.Consumer>
         {browserUtils => (
-          <Component {...props} dataBrowser={browserUtils} ref={ref} />
+          <Component {...props} datesBrowser={browserUtils} ref={ref} />
         )}
       </DatesBrowser.Consumer>
     );
