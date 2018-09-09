@@ -12,10 +12,10 @@ import {
   eachDayOfInterval,
   addYears,
   subYears,
+  isWeekend,
 } from 'date-fns';
 import { days, months } from './utils';
 import { EventExample } from './utils';
-import { zhCN } from 'date-fns/locale';
 
 const DatesBrowserContext = React.createContext({
   days: [],
@@ -46,6 +46,11 @@ export class DatesBrowser extends React.Component {
     stateReducer: (state, changes) => changes,
     onStateChange: () => {},
     onReset: () => {},
+    onSelectDate: () => {},
+    onAddCalendarYear: () => {},
+    onSubCalendarYear: () => {},
+    onSubCalendarMonth: () => {},
+    onAddCalendarMonth: () => {},
     initialDays: days,
     initialMonths: months,
     events: [],
@@ -117,16 +122,14 @@ export class DatesBrowser extends React.Component {
       .fill({})
       .map(() => {
         const currentDay = (totalDays -= 1);
+        const date = new Date(currentYear, prevMonthNumber, currentDay);
         return {
-          name: this.getState().days[
-            new Date(currentYear, prevMonthNumber, currentDay).getDay()
-          ],
+          name: this.getState().days[date.getDay()],
           day: currentDay,
-          date: new Date(currentYear, prevMonthNumber, currentDay),
+          date: date,
           offset: true,
-          events:
-            events &&
-            this.initializeEvents(currentYear, prevMonthNumber, currentDay),
+          weekend: isWeekend(date),
+          events: events && this.initializeEvents(date),
         };
       })
       .reverse();
@@ -154,16 +157,14 @@ export class DatesBrowser extends React.Component {
         .fill({})
         .map((u, day) => {
           const currentDay = day + 1;
+          const date = new Date(year, currentMonth, currentDay);
           return {
-            name: this.getState().days[
-              new Date(year, currentMonth, currentDay).getDay()
-            ],
+            name: this.getState().days[date.getDay()],
             day: currentDay,
-            date: new Date(year, currentMonth, currentDay),
+            date: date,
             today: isToday === day,
-            events:
-              events &&
-              this.initializeEvents(new Date(year, currentMonth, currentDay)),
+            weekend: isWeekend(date),
+            events: events && this.initializeEvents(date),
           };
         }),
     };
@@ -188,16 +189,14 @@ export class DatesBrowser extends React.Component {
       .fill({})
       .map((c, i) => {
         const currentDay = i + 1;
+        const date = new Date(currentYear, currentMonth, currentDay);
         return {
-          name: this.getState().days[
-            new Date(currentYear, currentMonth, currentDay).getDay()
-          ],
+          name: this.getState().days[date.getDay()],
           day: currentDay,
-          date: new Date(currentYear, currentMonth, currentDay),
+          date: date,
           offset: true,
-          events:
-            events &&
-            this.initializeEvents(currentYear, currentMonth, currentDay),
+          weekend: isWeekend(date),
+          events: events && this.initializeEvents(date),
         };
       });
     return {
@@ -237,37 +236,51 @@ export class DatesBrowser extends React.Component {
   addCalendarMonth = ({
     type = DatesBrowser.stateChangeTypes.addCalendarMonth,
   }) => {
-    this.internalSetState(state => ({
-      type,
-      date: addMonths(state.date, 1),
-    }));
+    this.internalSetState(
+      state => ({
+        type,
+        date: addMonths(state.date, 1),
+      }),
+      () => this.props.onAddCalendarMonth(this.getState().date),
+    );
   };
   subCalendarMonth = ({
     type = DatesBrowser.stateChangeTypes.subCalendarMonth,
   }) => {
-    this.internalSetState(state => ({
-      type,
-      date: subMonths(state.date, 1),
-    }));
+    this.internalSetState(
+      state => ({
+        type,
+        date: subMonths(state.date, 1),
+      }),
+      () => this.props.onSubCalendarMonth(this.getState().date),
+    );
   };
   addCalendarYear = ({
     type = DatesBrowser.stateChangeTypes.addCalendarYear,
   }) => {
-    this.internalSetState(state => ({
-      type,
-      date: addYears(state.date, 1),
-    }));
+    this.internalSetState(
+      state => ({
+        type,
+        date: addYears(state.date, 1),
+      }),
+      () => this.props.onAddCalendarYear(this.getState().date),
+    );
   };
   subCalendarYear = ({
     type = DatesBrowser.stateChangeTypes.subCalendarYear,
   }) => {
-    this.internalSetState(state => ({
-      type,
-      date: subYears(state.date, 1),
-    }));
+    this.internalSetState(
+      state => ({
+        type,
+        date: subYears(state.date, 1),
+      }),
+      () => this.props.onSubCalendarYear(this.getState().date),
+    );
   };
   selectDate = ({ type = DatesBrowser.stateChangeTypes.selectDate, date }) => {
-    this.internalSetState({ type, date });
+    this.internalSetState({ type, date }, () =>
+      this.props.onSelectDate(this.getState().date),
+    );
   };
   reset = () => {
     this.internalSetState(
