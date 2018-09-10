@@ -23,6 +23,9 @@ export const months = [
   'December',
 ];
 
+export const callAll = (...fns) => (...args) =>
+  fns.forEach(fn => fn && fn(...args));
+
 // 1. Should be able to show offsets if required, otherwise not.
 // 2. Could also hold hours for the day ?
 // 3. Events should optionally exist in case user selects a year so we dont have to

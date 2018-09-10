@@ -9,12 +9,13 @@ import {
   addMonths,
   subMonths,
   isSameMonth,
+  isSameDay,
   eachDayOfInterval,
   addYears,
   subYears,
   isWeekend,
 } from 'date-fns';
-import { days, months } from './utils';
+import { days, months, callAll } from './utils';
 import { EventExample } from './utils';
 
 const DatesBrowserContext = React.createContext({
@@ -55,6 +56,8 @@ export class DatesBrowser extends React.Component {
     initialMonths: months,
     events: [],
     initialGridBlocks: 42,
+    initialDate: new Date(),
+    initialSelected: null,
   };
   static stateChangeTypes = {
     addCalendarMonth: '__add_calendar_month__',
@@ -145,8 +148,11 @@ export class DatesBrowser extends React.Component {
     const currentMonth = month - 1;
     const totalDays = this.getNumberOfDaysInAMonth(currentMonth, year);
     const today = new Date().getDate() - 1;
+    const selected = this.getState().date.getDate() - 1;
     const isToday =
       isSameMonth(new Date(year, currentMonth, today), new Date()) && today;
+    const isSelected = calendarDay =>
+      isSameDay(this.getState().selected, calendarDay);
     return {
       name: this.getMonthByNumber(currentMonth),
       month,
@@ -164,6 +170,7 @@ export class DatesBrowser extends React.Component {
             date: date,
             today: isToday === day,
             weekend: isWeekend(date),
+            selected: isSelected(date),
             events: events && this.initializeEvents(date),
           };
         }),
@@ -276,9 +283,9 @@ export class DatesBrowser extends React.Component {
     );
   };
   selectDate = ({ type = DatesBrowser.stateChangeTypes.selectDate, date }) => {
-    this.internalSetState({ type, date }, () =>
-      this.props.onSelectDate(this.getState().date),
-    );
+    this.internalSetState({ type, date, selected: date }, () => {
+      return this.props.onSelectDate(this.getState().selected);
+    });
   };
   reset = () => {
     this.internalSetState(
@@ -291,7 +298,8 @@ export class DatesBrowser extends React.Component {
     days: this.props.initialDays,
     months: this.props.initialMonths,
     gridBlocks: this.props.initialGridBlocks,
-    date: new Date(),
+    date: this.props.initialDate,
+    selected: this.props.initialSelected,
     // functions
     getPrevMonthOffset: this.getPrevMonthOffset,
     getNextMonthOffset: this.getNextMonthOffset,
