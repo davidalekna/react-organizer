@@ -46,7 +46,6 @@
     "@babel/plugin-proposal-logical-assignment-operators": "^7.0.0",
     "@babel/plugin-proposal-object-rest-spread": "^7.0.0",
     "@babel/plugin-syntax-object-rest-spread": "^7.0.0",
-    "@babel/polyfill": "^7.0.0",
     "@babel/preset-env": "^7.0.0",
     "@babel/preset-react": "^7.0.0",
     "@storybook/addon-actions": "^3.4.10",
@@ -82,5 +81,7 @@
   "files": [
     "dist"
   ],
-  "dependencies": {}
+  "dependencies": {
+    "@babel/polyfill": "^7.0.0"
+  }
 }
