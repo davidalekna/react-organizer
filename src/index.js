@@ -1,3 +1,3 @@
-import { DatesBrowser, withDatesBrowser } from './datesBrowser';
+import { Organizer, withOrganizer } from './Organizer';
 
-export { DatesBrowser as default, withDatesBrowser };
+export { Organizer as default, withOrganizer };

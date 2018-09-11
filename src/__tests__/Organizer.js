@@ -1,7 +1,7 @@
 import 'react-testing-library/cleanup-after-each';
 import React from 'react';
 import { render } from 'react-testing-library';
-import DatesBrowser from '../';
+import Organizer from '../';
 
 test('should get previews month last weeks offset days', () => {
   const handleStateChange = jest.fn();
@@ -59,6 +59,6 @@ function setup({ render: renderFn = () => <div />, ...props } = {}) {
     renderArg = controllerArg;
     return renderFn(controllerArg);
   });
-  const utils = render(<DatesBrowser {...props}>{childrenSpy}</DatesBrowser>);
+  const utils = render(<Organizer {...props}>{childrenSpy}</Organizer>);
   return { childrenSpy, ...utils, ...renderArg };
 }

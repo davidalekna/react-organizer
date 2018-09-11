@@ -20,7 +20,7 @@ import {
 import { days, months, callAll } from './utils';
 import { EventExample } from './utils';
 
-const DatesBrowserContext = React.createContext({
+const OrganizerContext = React.createContext({
   days: [],
   months: [],
   date: new Date(),
@@ -34,7 +34,7 @@ const DatesBrowserContext = React.createContext({
   selectDate: () => {},
 });
 
-export class DatesBrowser extends React.Component {
+export class Organizer extends React.Component {
   static propTypes = {
     children: PropTypes.func,
     initialDays: PropTypes.array,
@@ -73,7 +73,7 @@ export class DatesBrowser extends React.Component {
     selectMonth: '__select_month__',
     selectYear: '__select_year__',
   };
-  static Consumer = DatesBrowserContext.Consumer;
+  static Consumer = OrganizerContext.Consumer;
   //
   changeDaysLanguage = () => [];
   changeMonthsLanguage = () => [];
@@ -245,7 +245,7 @@ export class DatesBrowser extends React.Component {
     return months;
   };
   addCalendarMonth = ({
-    type = DatesBrowser.stateChangeTypes.addCalendarMonth,
+    type = Organizer.stateChangeTypes.addCalendarMonth,
   }) => {
     this.internalSetState(
       state => ({
@@ -255,10 +255,7 @@ export class DatesBrowser extends React.Component {
       () => this.props.onAddCalendarMonth(this.getState().date),
     );
   };
-  selectMonth = ({
-    type = DatesBrowser.stateChangeTypes.selectMonth,
-    month,
-  }) => {
+  selectMonth = ({ type = Organizer.stateChangeTypes.selectMonth, month }) => {
     this.internalSetState(
       state => ({
         type,
@@ -268,7 +265,7 @@ export class DatesBrowser extends React.Component {
     );
   };
   subCalendarMonth = ({
-    type = DatesBrowser.stateChangeTypes.subCalendarMonth,
+    type = Organizer.stateChangeTypes.subCalendarMonth,
   }) => {
     this.internalSetState(
       state => ({
@@ -278,9 +275,7 @@ export class DatesBrowser extends React.Component {
       () => this.props.onSubCalendarMonth(this.getState().date),
     );
   };
-  addCalendarYear = ({
-    type = DatesBrowser.stateChangeTypes.addCalendarYear,
-  }) => {
+  addCalendarYear = ({ type = Organizer.stateChangeTypes.addCalendarYear }) => {
     this.internalSetState(
       state => ({
         type,
@@ -289,7 +284,7 @@ export class DatesBrowser extends React.Component {
       () => this.props.onAddCalendarYear(this.getState().date),
     );
   };
-  selectYear = ({ type = DatesBrowser.stateChangeTypes.selectYear, year }) => {
+  selectYear = ({ type = Organizer.stateChangeTypes.selectYear, year }) => {
     this.internalSetState(
       state => ({
         type,
@@ -298,9 +293,7 @@ export class DatesBrowser extends React.Component {
       () => this.props.onSelectYear(this.getState().date),
     );
   };
-  subCalendarYear = ({
-    type = DatesBrowser.stateChangeTypes.subCalendarYear,
-  }) => {
+  subCalendarYear = ({ type = Organizer.stateChangeTypes.subCalendarYear }) => {
     this.internalSetState(
       state => ({
         type,
@@ -309,14 +302,14 @@ export class DatesBrowser extends React.Component {
       () => this.props.onSubCalendarYear(this.getState().date),
     );
   };
-  selectDate = ({ type = DatesBrowser.stateChangeTypes.selectDate, date }) => {
+  selectDate = ({ type = Organizer.stateChangeTypes.selectDate, date }) => {
     this.internalSetState({ type, date, selected: date }, () => {
       return this.props.onSelectDate(this.getState().selected);
     });
   };
   reset = () => {
     this.internalSetState(
-      { ...this.initialState, type: DatesBrowser.stateChangeTypes.reset },
+      { ...this.initialState, type: Organizer.stateChangeTypes.reset },
       () => this.props.onReset(this.getState().date),
     );
   };
@@ -388,24 +381,24 @@ export class DatesBrowser extends React.Component {
     const { children } = this.props;
     const ui = typeof children === 'function' ? children(this.state) : children;
     return (
-      <DatesBrowserContext.Provider value={this.state}>
+      <OrganizerContext.Provider value={this.state}>
         {ui}
-      </DatesBrowserContext.Provider>
+      </OrganizerContext.Provider>
     );
   }
 }
 
-export function withDatesBrowser(Component) {
+export function withOrganizer(Component) {
   const Wrapper = React.forwardRef((props, ref) => {
     return (
-      <DatesBrowser.Consumer>
+      <Organizer.Consumer>
         {browserUtils => (
-          <Component {...props} datesBrowser={browserUtils} ref={ref} />
+          <Component {...props} organizer={browserUtils} ref={ref} />
         )}
-      </DatesBrowser.Consumer>
+      </Organizer.Consumer>
     );
   });
-  Wrapper.displayName = `withDatesBrowser(${Component.displayName ||
+  Wrapper.displayName = `withOrganizer(${Component.displayName ||
     Component.name})`;
   hoistNonReactStatics(Wrapper, Component);
   return Wrapper;

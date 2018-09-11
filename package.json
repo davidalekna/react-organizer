@@ -1,16 +1,16 @@
 {
-  "name": "react-dates-browser",
+  "name": "react-organizer",
   "version": "0.1.9",
   "description": "DatesBrowser is a lightweight, fast and extendable render props component",
   "main": "dist/index.js",
   "repository": {
     "type": "git",
-    "url": "https://github.com/davidalekna/react-dates-browser.git"
+    "url": "https://github.com/davidalekna/react-organizer.git"
   },
   "bugs": {
-    "url": "https://github.com/davidalekna/react-dates-browser/issues"
+    "url": "https://github.com/davidalekna/react-organizer/issues"
   },
-  "homepage": "https://github.com/davidalekna/react-dates-browser#readme",
+  "homepage": "https://github.com/davidalekna/react-organizer#readme",
   "keywords": [
     "react",
     "dates"
