@@ -14,6 +14,8 @@ import {
   addYears,
   subYears,
   isWeekend,
+  setMonth,
+  setYear,
 } from 'date-fns';
 import { days, months, callAll } from './utils';
 import { EventExample } from './utils';
@@ -52,6 +54,8 @@ export class DatesBrowser extends React.Component {
     onSubCalendarYear: () => {},
     onSubCalendarMonth: () => {},
     onAddCalendarMonth: () => {},
+    onSelectMonth: () => {},
+    onSelectYear: () => {},
     initialDays: days,
     initialMonths: months,
     events: [],
@@ -66,6 +70,8 @@ export class DatesBrowser extends React.Component {
     reset: '__reset__',
     addCalendarYear: '__add_calendar_year__',
     subCalendarYear: '__sub_calendar_year__',
+    selectMonth: '__select_month__',
+    selectYear: '__select_year__',
   };
   static Consumer = DatesBrowserContext.Consumer;
   //
@@ -249,6 +255,18 @@ export class DatesBrowser extends React.Component {
       () => this.props.onAddCalendarMonth(this.getState().date),
     );
   };
+  selectMonth = ({
+    type = DatesBrowser.stateChangeTypes.selectMonth,
+    month,
+  }) => {
+    this.internalSetState(
+      state => ({
+        type,
+        date: setMonth(state.date, month),
+      }),
+      () => this.props.onSelectMonth(this.getState().date),
+    );
+  };
   subCalendarMonth = ({
     type = DatesBrowser.stateChangeTypes.subCalendarMonth,
   }) => {
@@ -269,6 +287,15 @@ export class DatesBrowser extends React.Component {
         date: addYears(state.date, 1),
       }),
       () => this.props.onAddCalendarYear(this.getState().date),
+    );
+  };
+  selectYear = ({ type = DatesBrowser.stateChangeTypes.selectYear, year }) => {
+    this.internalSetState(
+      state => ({
+        type,
+        date: setYear(state.date, year),
+      }),
+      () => this.props.onSelectYear(this.getState().date),
     );
   };
   subCalendarYear = ({
@@ -312,6 +339,8 @@ export class DatesBrowser extends React.Component {
     subCalendarYear: this.subCalendarYear,
     selectDate: this.selectDate,
     reset: this.reset,
+    selectMonth: this.selectMonth,
+    selectYear: this.selectYear,
   };
   state = this.initialState;
   isControlledProp(key) {
