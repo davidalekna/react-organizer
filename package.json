@@ -1,7 +1,7 @@
 {
   "name": "react-organizer",
-  "version": "0.1.9",
-  "description": "DatesBrowser is a lightweight, fast and extendable render props component",
+  "version": "0.0.1",
+  "description": "Organizer is a lightweight, fast and extendable render props component",
   "main": "dist/index.js",
   "repository": {
     "type": "git",
@@ -13,7 +13,18 @@
   "homepage": "https://github.com/davidalekna/react-organizer#readme",
   "keywords": [
     "react",
-    "dates"
+    "react-component",
+    "component",
+    "calendar",
+    "date-picker",
+    "datepicker",
+    "date",
+    "picker",
+    "event",
+    "events manager",
+    "date-fns",
+    "calendar",
+    "render-props"
   ],
   "author": "David Alekna <alekna@live.co.uk>",
   "license": "MIT",
