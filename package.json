@@ -81,7 +81,5 @@
   "files": [
     "dist"
   ],
-  "dependencies": {
-    "@babel/polyfill": "^7.0.0"
-  }
+  "dependencies": {}
 }
