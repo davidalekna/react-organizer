@@ -81,5 +81,10 @@
   "files": [
     "dist"
   ],
+  "config": {
+    "ghooks": {
+      "pre-commit": "npm run validate"
+    }
+  },
   "dependencies": {}
 }

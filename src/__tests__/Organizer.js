@@ -35,23 +35,23 @@ test('should get next month first weeks offset days', () => {
   expect(result).toMatchSnapshot();
 });
 
-test('should get full month with prev offset days and next offset days', () => {
-  const handleStateChange = jest.fn();
-  const { getFullMonth } = setup({
-    onStateChange: handleStateChange,
-  });
-  const result = getFullMonth({ month: 9, year: 2018 });
-  expect(result).toMatchSnapshot();
-});
+// test('should get full month with prev offset days and next offset days', () => {
+//   const handleStateChange = jest.fn();
+//   const { getFullMonth } = setup({
+//     onStateChange: handleStateChange,
+//   });
+//   const result = getFullMonth({ month: 9, year: 2018 });
+//   expect(result).toMatchSnapshot();
+// });
 
-test('should get full calendar year', () => {
-  const handleStateChange = jest.fn();
-  const { getFullCalendarYear } = setup({
-    onStateChange: handleStateChange,
-  });
-  const result = getFullCalendarYear({ year: 2018 });
-  expect(result).toMatchSnapshot();
-});
+// test('should get full calendar year', () => {
+//   const handleStateChange = jest.fn();
+//   const { getFullCalendarYear } = setup({
+//     onStateChange: handleStateChange,
+//   });
+//   const result = getFullCalendarYear({ year: 2018 });
+//   expect(result).toMatchSnapshot();
+// });
 
 function setup({ render: renderFn = () => <div />, ...props } = {}) {
   let renderArg;
