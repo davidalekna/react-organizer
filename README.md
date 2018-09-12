@@ -1,7 +1,7 @@
 <h1 align="center">
   Organizer 📅 (beta)
 </h1>
-<p align="center" style="font-size: 1.2rem;">Primitive to build simple, flexible, enhanced dates, calendars, input slector React components</p>
+<p align="center" style="font-size: 1.2rem;">Primitive to build simple, flexible, enhanced dates, calendars, input slector, events manager React components</p>
 
 <hr />
 
