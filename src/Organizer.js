@@ -24,14 +24,22 @@ const OrganizerContext = React.createContext({
   days: [],
   months: [],
   date: new Date(),
+  selected: null,
   // functions
   getPrevMonthOffset: () => {},
   getNextMonthOffset: () => {},
   getCurrentMonth: () => {},
   getFullMonth: () => {},
+  getFullYear: () => {},
   addCalendarMonth: () => {},
   subCalendarMonth: () => {},
+  addCalendarYear: () => {},
+  subCalendarYear: () => {},
   selectDate: () => {},
+  reset: () => {},
+  selectMonth: () => {},
+  selectYear: () => {},
+  changeLanguage: () => {},
 });
 
 export class Organizer extends React.Component {
@@ -44,6 +52,9 @@ export class Organizer extends React.Component {
         starts: PropTypes.instanceOf(Date).isRequired,
       }),
     ),
+    initialGridBlocks: PropTypes.number,
+    initialDate: PropTypes.instanceOf(Date),
+    initialSelected: PropTypes.instanceOf(Date),
   };
   static defaultProps = {
     stateReducer: (state, changes) => changes,
@@ -56,6 +67,7 @@ export class Organizer extends React.Component {
     onAddCalendarMonth: () => {},
     onSelectMonth: () => {},
     onSelectYear: () => {},
+    onChangeLanguage: () => {},
     initialDays: days,
     initialMonths: months,
     events: [],
@@ -64,19 +76,38 @@ export class Organizer extends React.Component {
     initialSelected: null,
   };
   static stateChangeTypes = {
+    reset: '__reset__',
+    selectDate: '__select_date__',
     addCalendarMonth: '__add_calendar_month__',
     subCalendarMonth: '__subtract_calendar_month__',
-    selectDate: '__select_date__',
-    reset: '__reset__',
     addCalendarYear: '__add_calendar_year__',
     subCalendarYear: '__sub_calendar_year__',
     selectMonth: '__select_month__',
     selectYear: '__select_year__',
+    changeLanguage: '__change_language__',
   };
   static Consumer = OrganizerContext.Consumer;
   //
-  changeDaysLanguage = () => [];
-  changeMonthsLanguage = () => [];
+  changeLanguage = ({
+    type = Organizer.stateChangeTypes.changeLanguage,
+    days,
+    months,
+  }) => {
+    if (days.length === 6 && months.length === 11) {
+      this.internalSetState({ type, days, months }, () =>
+        this.props.onChangeLanguage({
+          days: this.getState().days,
+          months: this.getState().months,
+        }),
+      );
+    } else {
+      throw new Error(
+        `changeLanguage: Not enough days ${days.length} or months ${
+          months.length
+        }`,
+      );
+    }
+  };
   initializeEvents = forDate => {
     const getDate = d => format(d, 'dd/MM/yyyy');
     const currentDate = getDate(forDate);
@@ -84,10 +115,6 @@ export class Organizer extends React.Component {
       ({ starts }) => getDate(starts) === currentDate,
     );
   };
-  eventInsert = () => {};
-  eventUpdate = () => {};
-  eventDelete = () => {};
-  //
   getWeeksInAMonth = (month, year) => {
     const weeks = [];
     const firstDate = new Date(year, month, 1);
@@ -320,7 +347,7 @@ export class Organizer extends React.Component {
     gridBlocks: this.props.initialGridBlocks,
     date: this.props.initialDate,
     selected: this.props.initialSelected,
-    // functions
+    // fns
     getPrevMonthOffset: this.getPrevMonthOffset,
     getNextMonthOffset: this.getNextMonthOffset,
     getCurrentMonth: this.getCurrentMonth,
@@ -334,6 +361,7 @@ export class Organizer extends React.Component {
     reset: this.reset,
     selectMonth: this.selectMonth,
     selectYear: this.selectYear,
+    changeLanguage: this.changeLanguage,
   };
   state = this.initialState;
   isControlledProp(key) {
