@@ -14,11 +14,11 @@
 
 ## The problem
 
-Explain the problem
+You need a calendar, events manager, date picker, range picker experience in your application and you want it to be accessible. You also want it to be simple and flexible to account for your use cases.
 
 ## This solution
 
-Explain the solution
+This is a render props component that provides functionality and state management to create your own styled components. 
 
 ## Table of Contents
 
