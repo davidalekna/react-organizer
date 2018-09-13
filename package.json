@@ -83,7 +83,7 @@
     }
   },
   "dependencies": {
-    "date-fns": "^1.29.0",
+    "date-fns": "^2.0.0-alpha.16",
     "hoist-non-react-statics": "^3.0.1"
   }
 }

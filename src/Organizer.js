@@ -89,9 +89,11 @@ export class Organizer extends React.Component {
   _initializeEvents = forDate => {
     const getDate = d => format(d, 'dd/MM/yyyy');
     const currentDate = getDate(forDate);
-    return this.props.events.filter(
-      ({ starts }) => getDate(starts) === currentDate,
-    );
+    return this.props.events.filter(({ starts }) => {
+      console.log(getDate(starts));
+      console.log(currentDate);
+      return getDate(starts) === currentDate;
+    });
   };
   _getWeeksInAMonth = (month, year) => {
     const weeks = [];
@@ -131,7 +133,7 @@ export class Organizer extends React.Component {
       );
     }
   };
-  getPrevMonthOffset = ({ month, year, events }) => {
+  getPrevMonthOffset = ({ month, year }) => {
     let prevMonthNumber = month - 2;
     let currentYear = year;
     if (prevMonthNumber < 0) {
@@ -156,7 +158,6 @@ export class Organizer extends React.Component {
           date: date,
           offset: true,
           weekend: isWeekend(date),
-          events: (events && this._initializeEvents(date)) || null,
         };
       })
       .reverse();
@@ -168,7 +169,7 @@ export class Organizer extends React.Component {
       days: assignDays,
     };
   };
-  getCurrentMonth = ({ month, year, events }) => {
+  getCurrentMonth = ({ month, year }) => {
     const currentMonth = month - 1;
     const totalDays = this._getNumberOfDaysInAMonth(currentMonth, year);
     const today = new Date().getDate() - 1;
@@ -195,18 +196,11 @@ export class Organizer extends React.Component {
             today: isToday === day,
             weekend: isWeekend(date),
             selected: isSelected(date),
-            events: (events && this._initializeEvents(date)) || null,
           };
         }),
     };
   };
-  getNextMonthOffset = ({
-    month,
-    year,
-    totalOffsetDays,
-    totalDays,
-    events,
-  }) => {
+  getNextMonthOffset = ({ month, year, totalOffsetDays, totalDays }) => {
     let currentMonth = month;
     let currentYear = year;
     if (currentMonth > 11) {
@@ -227,7 +221,6 @@ export class Organizer extends React.Component {
           date: date,
           offset: true,
           weekend: isWeekend(date),
-          events: (events && this._initializeEvents(date)) || null,
         };
       });
     return {
@@ -252,7 +245,13 @@ export class Organizer extends React.Component {
     });
     return {
       ...current,
-      days: [...firstOffset.days, ...current.days, ...nextOffset.days],
+      days: [...firstOffset.days, ...current.days, ...nextOffset.days].map(
+        day => {
+          return Object.assign(day, {
+            events: (events && this._initializeEvents(day.date)) || null,
+          });
+        },
+      ),
     };
   };
   getFullYear = events => {
