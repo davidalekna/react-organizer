@@ -28,30 +28,26 @@ Explain the solution
 
 - [Installation](#installation)
 - [Usage](#usage)
-- [Basic Props](#basic-props)
+- [Props](#props)
+  - [days](#days)
+  - [months](#months)
+  - [date,](#date)
+  - [selected,](#selected)
+  - [getPrevMonthOffset](#getprevmonthoffset)
+  - [getNextMonthOffset](#getnextmonthoffset)
+  - [getCurrentMonth](#getcurrentmonth)
+  - [getFullMonth](#getfullmonth)
+  - [getFullYear](#getfullyear)
+  - [addCalendarMonth](#addcalendarmonth)
+  - [subCalendarMonth](#subcalendarmonth)
+  - [addCalendarYear](#addcalendaryear)
+  - [subCalendarYear](#subcalendaryear)
+  - [selectDate](#selectdate)
+  - [reset](#reset)
+  - [selectMonth](#selectmonth)
+  - [selectYear](#selectyear)
+  - [changeLanguage](#changelanguage)
   - [children](#children)
-  - [columns](#columns)
-  - [columnFlex](#columnflex)
-  - [stateReducer](#statereducer)
-- [Advanced Props](#advanced-props)
-  - [visibleColumns](#visiblecolumns)
-  - [viewType](#viewtype)
-  - [selectAllCheckboxState](#selectallcheckboxstate)
-  - [currentSort](#currentsort)
-  - [checked](#checked)
-  - [viewsAvailable](#viewsavailable)
-  - [switchViewType](#switchviewtype)
-  - [switchColumns](#switchcolumns)
-  - [checkboxState](#checkboxstate)
-  - [offsetColumns](#offsetcolumns)
-  - [checkboxToggle](#checkboxtoggle)
-  - [onSelection](#onselection)
-  - [changeSortDirection](#changesortdirection)
-  - [defaultSortMethod](#defaultsortmethod)
-  - [sortData](#sortdata)
-  - [onStateChange](#onstatechange)
-- [stateChangeTypes](#statechangetypes)
-- [Children Function](#children-function)
 - [LICENSE](#license)
 
 <!-- END doctoc generated TOC please keep comment here to allow auto update -->
@@ -65,18 +61,18 @@ should be installed as one of your project's `dependencies`:
 npm install --save react-organizer
 ```
 
-> This package also depends on `react`, `hoist-non-react-statics` and `prop-types`. Please make sure you have those installed as well.
+> This package also depends on `react` and `prop-types`. Please make sure you have those installed as well.
 
 ## Usage
 
-> NOTE: DataBrowser component will not provide any styles, only the functionality. Styles used in the examples are only for better visualization for what could be achieved using this component.
+> NOTE: Organizer component will not provide any styles or jsx, only the functionality. Styles used in the examples are only for better visualization for what could be achieved using this component.
 
 > [Try it out in the browser](https://codesandbox.io/s/github/davidalekna/organizer-examples)
 
 ```jsx
 import React from 'react'
 import {render} from 'react-dom'
-import DataBrowser from 'react-organizer'
+import Organizer from 'react-organizer'
 
 render(
   <Organizer>
@@ -87,6 +83,112 @@ render(
   document.getElementById('root'),
 )
 ```
+
+## Props
+
+This is the list of props that you should know about. 
+
+### days
+
+> `array` | optional
+
+array of week day names in prefered language. Defaults to english.
+
+### months
+
+> `array` | optional
+
+array of month names in prefered language. Defaults to english.
+
+### date,
+
+> `date` | optional
+
+calendar date state
+
+### selected,
+
+> `date` | optional
+
+selected date state
+
+### getPrevMonthOffset
+
+> `function({month: number, year: number, events: boolean})` 
+
+generates previews month offset
+
+### getNextMonthOffset
+
+> `function({month: number, year: number, events: boolean, totalOffsetDays: number, totalDays: number})`
+
+generates next month offset depending on how many grid items you want to display, defaults to 42
+
+### getCurrentMonth
+
+> `function({month: number, year: number, events: boolean})` 
+
+generates current month
+
+### getFullMonth
+
+> `function(initMonth: number, events: boolean)` 
+
+generates full month with previews and next months offset days
+
+### getFullYear
+
+> `function(events: boolean)` 
+
+generates full year with months with previews and next months offset days
+
+### addCalendarMonth
+
+> `function()` 
+
+### subCalendarMonth
+
+> `function()`  
+
+### addCalendarYear
+
+> `function()` 
+
+### subCalendarYear
+
+> `function()` 
+
+### selectDate
+
+> `function({date: object})` 
+
+selects date and adds a flag of selected on day object
+
+### reset
+
+> `function()` 
+
+resets calendar to initial state
+
+### selectMonth
+
+> `function({month: number})` 
+
+### selectYear
+
+> `function({year: number})` 
+
+### changeLanguage
+
+> `function({days: array, months: array})` 
+
+change language state
+
+### children
+
+> `function({})` | _required_
+
+This is called with an object. 
 
 ## LICENSE
 
