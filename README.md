@@ -25,14 +25,13 @@ Explain the solution
 <!-- START doctoc generated TOC please keep comment here to allow auto update -->
 <!-- DON'T EDIT THIS SECTION, INSTEAD RE-RUN doctoc TO UPDATE -->
 
-
 - [Installation](#installation)
 - [Usage](#usage)
 - [Props](#props)
   - [days](#days)
   - [months](#months)
-  - [date,](#date)
-  - [selected,](#selected)
+  - [date](#date)
+  - [selected](#selected)
   - [getPrevMonthOffset](#getprevmonthoffset)
   - [getNextMonthOffset](#getnextmonthoffset)
   - [getCurrentMonth](#getcurrentmonth)
@@ -100,13 +99,13 @@ array of week day names in prefered language. Defaults to english.
 
 array of month names in prefered language. Defaults to english.
 
-### date,
+### date
 
 > `date` | optional
 
 calendar date state
 
-### selected,
+### selected
 
 > `date` | optional
 

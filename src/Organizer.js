@@ -116,7 +116,7 @@ export class Organizer extends React.Component {
     days,
     months,
   }) => {
-    if (days.length === 6 && months.length === 11) {
+    if (days.length === 7 && months.length === 12) {
       this.internalSetState({ type, days, months }, () =>
         this.props.onChangeLanguage({
           days: this.getState().days,
@@ -264,7 +264,7 @@ export class Organizer extends React.Component {
   };
   addCalendarMonth = ({
     type = Organizer.stateChangeTypes.addCalendarMonth,
-  }) => {
+  } = {}) => {
     this.internalSetState(
       state => ({
         type,
@@ -284,7 +284,7 @@ export class Organizer extends React.Component {
   };
   subCalendarMonth = ({
     type = Organizer.stateChangeTypes.subCalendarMonth,
-  }) => {
+  } = {}) => {
     this.internalSetState(
       state => ({
         type,
@@ -293,7 +293,9 @@ export class Organizer extends React.Component {
       () => this.props.onSubCalendarMonth(this.getState().date),
     );
   };
-  addCalendarYear = ({ type = Organizer.stateChangeTypes.addCalendarYear }) => {
+  addCalendarYear = ({
+    type = Organizer.stateChangeTypes.addCalendarYear,
+  } = {}) => {
     this.internalSetState(
       state => ({
         type,
@@ -311,7 +313,9 @@ export class Organizer extends React.Component {
       () => this.props.onSelectYear(this.getState().date),
     );
   };
-  subCalendarYear = ({ type = Organizer.stateChangeTypes.subCalendarYear }) => {
+  subCalendarYear = ({
+    type = Organizer.stateChangeTypes.subCalendarYear,
+  } = {}) => {
     this.internalSetState(
       state => ({
         type,

@@ -59,13 +59,204 @@ test('should get full month with prev offset days and next offset days', () => {
 });
 
 test('should get full calendar year', () => {
-  const handleStateChange = jest.fn();
-  const { getFullYear } = setup({
-    onStateChange: handleStateChange,
-  });
+  const { getFullYear } = setup();
   const result = getFullYear();
   expect(result.length).toEqual(12);
 });
+
+test('should add calendar month', () => {
+  const handleStateChange = jest.fn();
+  const { addCalendarMonth } = setup({
+    initialDate: new Date('2018', '09', '17'),
+    onStateChange: handleStateChange,
+  });
+  addCalendarMonth();
+  const changes = {
+    type: Organizer.stateChangeTypes.addCalendarMonth,
+    date: new Date('2018', '10', '17'),
+  };
+
+  expect(handleStateChange).toHaveBeenCalledTimes(1);
+  expect(handleStateChange).toHaveBeenLastCalledWith(
+    changes,
+    expect.objectContaining({ date: new Date('2018', '10', '17') }),
+  );
+});
+
+test('should subtract calendar month', () => {
+  const handleStateChange = jest.fn();
+  const { subCalendarMonth } = setup({
+    initialDate: new Date('2018', '09', '17'),
+    onStateChange: handleStateChange,
+  });
+  subCalendarMonth();
+  const changes = {
+    type: Organizer.stateChangeTypes.subCalendarMonth,
+    date: new Date('2018', '08', '17'),
+  };
+
+  expect(handleStateChange).toHaveBeenCalledTimes(1);
+  expect(handleStateChange).toHaveBeenLastCalledWith(
+    changes,
+    expect.objectContaining({ date: new Date('2018', '08', '17') }),
+  );
+});
+
+test('should add calendar year', () => {
+  const handleStateChange = jest.fn();
+  const { addCalendarYear } = setup({
+    initialDate: new Date('2018', '09', '17'),
+    onStateChange: handleStateChange,
+  });
+  addCalendarYear();
+  const changes = {
+    type: Organizer.stateChangeTypes.addCalendarYear,
+    date: new Date('2019', '09', '17'),
+  };
+
+  expect(handleStateChange).toHaveBeenCalledTimes(1);
+  expect(handleStateChange).toHaveBeenLastCalledWith(
+    changes,
+    expect.objectContaining({ date: new Date('2019', '09', '17') }),
+  );
+});
+
+test('should subtract calendar year', () => {
+  const handleStateChange = jest.fn();
+  const { subCalendarYear } = setup({
+    initialDate: new Date('2018', '09', '17'),
+    onStateChange: handleStateChange,
+  });
+  subCalendarYear();
+  const changes = {
+    type: Organizer.stateChangeTypes.subCalendarYear,
+    date: new Date('2017', '09', '17'),
+  };
+
+  expect(handleStateChange).toHaveBeenCalledTimes(1);
+  expect(handleStateChange).toHaveBeenLastCalledWith(
+    changes,
+    expect.objectContaining({ date: new Date('2017', '09', '17') }),
+  );
+});
+
+test('should select requested date', () => {
+  const handleStateChange = jest.fn();
+  const { selectDate } = setup({
+    onStateChange: handleStateChange,
+  });
+  selectDate({ date: new Date('2022', '09', '17') });
+  const changes = {
+    type: Organizer.stateChangeTypes.selectDate,
+    date: new Date('2022', '09', '17'),
+    selected: new Date('2022', '09', '17'),
+  };
+
+  expect(handleStateChange).toHaveBeenCalledTimes(1);
+  expect(handleStateChange).toHaveBeenLastCalledWith(
+    changes,
+    expect.objectContaining({
+      date: new Date('2022', '09', '17'),
+      selected: new Date('2022', '09', '17'),
+    }),
+  );
+});
+
+test('should select requested month', () => {
+  const handleStateChange = jest.fn();
+  const { selectMonth } = setup({
+    initialDate: new Date('2018', '09', '17'),
+    onStateChange: handleStateChange,
+  });
+  selectMonth({ month: 11 });
+  const changes = {
+    type: Organizer.stateChangeTypes.selectMonth,
+    date: new Date('2018', '11', '17'),
+  };
+
+  expect(handleStateChange).toHaveBeenCalledTimes(1);
+  expect(handleStateChange).toHaveBeenLastCalledWith(
+    changes,
+    expect.objectContaining({ date: new Date('2018', '11', '17') }),
+  );
+});
+
+test('should select requested year', () => {
+  const handleStateChange = jest.fn();
+  const { selectYear } = setup({
+    initialDate: new Date('2018', '09', '17'),
+    onStateChange: handleStateChange,
+  });
+  selectYear({ year: 1989 });
+  const changes = {
+    type: Organizer.stateChangeTypes.selectYear,
+    date: new Date('1989', '09', '17'),
+  };
+
+  expect(handleStateChange).toHaveBeenCalledTimes(1);
+  expect(handleStateChange).toHaveBeenLastCalledWith(
+    changes,
+    expect.objectContaining({ date: new Date('1989', '09', '17') }),
+  );
+});
+
+test('should change language', () => {
+  const handleStateChange = jest.fn();
+  const { changeLanguage } = setup({
+    initialDate: new Date('2018', '09', '17'),
+    onStateChange: handleStateChange,
+  });
+  const days = [
+    'понедельник',
+    'вторник',
+    'среда',
+    'четверг',
+    'пятница',
+    'суббота',
+    'воскресенье',
+  ];
+  const months = [
+    'январь',
+    'февраль',
+    'март',
+    'апрель',
+    'май',
+    'июнь',
+    'июль',
+    'август',
+    'сентябрь',
+    'октябрь',
+    'ноябрь',
+    'декабрь',
+  ];
+  changeLanguage({ days, months });
+  const changes = {
+    type: Organizer.stateChangeTypes.changeLanguage,
+    days,
+    months,
+  };
+
+  expect(handleStateChange).toHaveBeenCalledTimes(1);
+  expect(handleStateChange).toHaveBeenLastCalledWith(
+    changes,
+    expect.objectContaining({ days, months }),
+  );
+});
+
+// test('should reset the state', () => {
+//   const handleStateChange = jest.fn();
+//   const { reset } = setup({
+//     onStateChange: handleStateChange,
+//   });
+//   reset();
+//   const changes = Organizer.initialState;
+
+//   expect(handleStateChange).toHaveBeenCalledTimes(1);
+//   expect(handleStateChange).toHaveBeenLastCalledWith(
+//     changes,
+//     expect.objectContaining(Organizer.initialState),
+//   );
+// });
 
 function setup({ render: renderFn = () => <div />, ...props } = {}) {
   let renderArg;
