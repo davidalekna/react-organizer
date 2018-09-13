@@ -1,6 +1,7 @@
 import React from 'react';
 import PropTypes from 'prop-types';
 import hoistNonReactStatics from 'hoist-non-react-statics';
+import { days, months } from './utils';
 import {
   format,
   getYear,
@@ -16,8 +17,6 @@ import {
   setMonth,
   setYear,
 } from 'date-fns';
-import { days, months, callAll } from './utils';
-import { EventExample } from './utils';
 
 const OrganizerContext = React.createContext({
   days: [],
@@ -87,6 +86,31 @@ export class Organizer extends React.Component {
   };
   static Consumer = OrganizerContext.Consumer;
   //
+  _initializeEvents = forDate => {
+    const getDate = d => format(d, 'dd/MM/yyyy');
+    const currentDate = getDate(forDate);
+    return this.props.events.filter(
+      ({ starts }) => getDate(starts) === currentDate,
+    );
+  };
+  _getWeeksInAMonth = (month, year) => {
+    const weeks = [];
+    const firstDate = new Date(year, month, 1);
+    const lastDate = new Date(year, month + 1, 0);
+    const numDays = lastDate.getDate();
+    let start = 1;
+    let end = 7 - firstDate.getDay();
+    while (start <= numDays) {
+      weeks.push({ start, end });
+      start = end + 1;
+      end = end + 7;
+      if (end > numDays) end = numDays;
+    }
+    return weeks;
+  };
+  _getNumberOfDaysInAMonth(month, year) {
+    return new Date(year, month + 1, 0).getDate();
+  }
   changeLanguage = ({
     type = Organizer.stateChangeTypes.changeLanguage,
     days,
@@ -107,38 +131,6 @@ export class Organizer extends React.Component {
       );
     }
   };
-  initializeEvents = forDate => {
-    const getDate = d => format(d, 'dd/MM/yyyy');
-    const currentDate = getDate(forDate);
-    return this.props.events.filter(
-      ({ starts }) => getDate(starts) === currentDate,
-    );
-  };
-  getWeeksInAMonth = (month, year) => {
-    const weeks = [];
-    const firstDate = new Date(year, month, 1);
-    const lastDate = new Date(year, month + 1, 0);
-    const numDays = lastDate.getDate();
-    let start = 1;
-    let end = 7 - firstDate.getDay();
-    while (start <= numDays) {
-      weeks.push({ start, end });
-      start = end + 1;
-      end = end + 7;
-      if (end > numDays) end = numDays;
-    }
-    return weeks;
-  };
-  getMonthByNumber(number) {
-    return this.getState().months[number];
-  }
-  getNumberOfDaysInAMonth(month, year) {
-    return new Date(year, month + 1, 0).getDate();
-  }
-  getToday = () => new Date().getDate() - 1;
-  getCurrentMonthNumber = () => new Date().getMonth();
-  getCurrentYear = () => new Date().getFullYear();
-  // Construct callendar
   getPrevMonthOffset = ({ month, year, events }) => {
     let prevMonthNumber = month - 2;
     let currentYear = year;
@@ -147,12 +139,12 @@ export class Organizer extends React.Component {
       prevMonthNumber = 11;
       currentYear = currentYear - 1;
     }
-    const { end, start } = this.getWeeksInAMonth(
+    const { end, start } = this._getWeeksInAMonth(
       prevMonthNumber,
       currentYear,
     ).pop();
     let totalDays =
-      this.getNumberOfDaysInAMonth(prevMonthNumber, currentYear) + 1;
+      this._getNumberOfDaysInAMonth(prevMonthNumber, currentYear) + 1;
     const assignDays = Array(end - start)
       .fill({})
       .map(() => {
@@ -164,12 +156,12 @@ export class Organizer extends React.Component {
           date: date,
           offset: true,
           weekend: isWeekend(date),
-          events: events && this.initializeEvents(date),
+          events: events && this._initializeEvents(date),
         };
       })
       .reverse();
     return {
-      name: this.getMonthByNumber(prevMonthNumber),
+      name: this.getState().months[prevMonthNumber],
       month: prevMonthNumber + 1,
       year: currentYear,
       totalOffsetDays: assignDays.length,
@@ -178,7 +170,7 @@ export class Organizer extends React.Component {
   };
   getCurrentMonth = ({ month, year, events }) => {
     const currentMonth = month - 1;
-    const totalDays = this.getNumberOfDaysInAMonth(currentMonth, year);
+    const totalDays = this._getNumberOfDaysInAMonth(currentMonth, year);
     const today = new Date().getDate() - 1;
     const selected = this.getState().date.getDate() - 1;
     const isToday =
@@ -186,11 +178,11 @@ export class Organizer extends React.Component {
     const isSelected = calendarDay =>
       isSameDay(this.getState().selected, calendarDay);
     return {
-      name: this.getMonthByNumber(currentMonth),
+      name: this.getState().months[currentMonth],
       month,
       year,
       totalDays,
-      totalWeeks: this.getWeeksInAMonth(currentMonth, year).length,
+      totalWeeks: this._getWeeksInAMonth(currentMonth, year).length,
       days: Array(totalDays)
         .fill({})
         .map((u, day) => {
@@ -203,7 +195,7 @@ export class Organizer extends React.Component {
             today: isToday === day,
             weekend: isWeekend(date),
             selected: isSelected(date),
-            events: events && this.initializeEvents(date),
+            events: events && this._initializeEvents(date),
           };
         }),
     };
@@ -235,11 +227,11 @@ export class Organizer extends React.Component {
           date: date,
           offset: true,
           weekend: isWeekend(date),
-          events: events && this.initializeEvents(date),
+          events: events && this._initializeEvents(date),
         };
       });
     return {
-      name: this.getMonthByNumber(currentMonth),
+      name: this.getState().months[currentMonth],
       month: currentMonth + 1,
       year: currentYear,
       totalOffsetDays: assignDays.length,

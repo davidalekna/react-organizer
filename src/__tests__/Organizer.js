@@ -3,55 +3,45 @@ import React from 'react';
 import { render } from 'react-testing-library';
 import Organizer from '../';
 
+const initialDate = { month: 8, year: 2018 };
+
 test('should get previews month last weeks offset days', () => {
-  const handleStateChange = jest.fn();
-  const { getPrevMonthOffset } = setup({
-    onStateChange: handleStateChange,
-  });
-  const result = getPrevMonthOffset({ month: 9, year: 2018 });
+  const { getPrevMonthOffset } = setup();
+  const result = getPrevMonthOffset(initialDate);
   expect(result).toMatchSnapshot();
 });
 
 test('should get current month days and events', () => {
-  const handleStateChange = jest.fn();
-  const { getCurrentMonth } = setup({
-    onStateChange: handleStateChange,
-  });
-  const result = getCurrentMonth({ month: 9, year: 2018 });
+  const { getCurrentMonth } = setup();
+  const result = getCurrentMonth(initialDate);
   expect(result).toMatchSnapshot();
 });
 
 test('should get next month first weeks offset days', () => {
-  const handleStateChange = jest.fn();
-  const { getNextMonthOffset } = setup({
-    onStateChange: handleStateChange,
-  });
+  const { getNextMonthOffset } = setup();
   const result = getNextMonthOffset({
-    month: 9,
-    year: 2018,
+    ...initialDate,
     totalOffsetDays: 5,
     totalDays: 30,
   });
   expect(result).toMatchSnapshot();
 });
 
-// test('should get full month with prev offset days and next offset days', () => {
-//   const handleStateChange = jest.fn();
-//   const { getFullMonth } = setup({
-//     onStateChange: handleStateChange,
-//   });
-//   const result = getFullMonth({ month: 9, year: 2018 });
-//   expect(result).toMatchSnapshot();
-// });
+test('should get full month with prev offset days and next offset days', () => {
+  const { getFullMonth } = setup();
+  const result = getFullMonth(8, true);
+  expect(result).toMatchSnapshot();
+});
 
-// test('should get full calendar year', () => {
-//   const handleStateChange = jest.fn();
-//   const { getFullCalendarYear } = setup({
-//     onStateChange: handleStateChange,
-//   });
-//   const result = getFullCalendarYear({ year: 2018 });
-//   expect(result).toMatchSnapshot();
-// });
+test('should get full calendar year', () => {
+  // will fail because of moving today date 🤔
+  const handleStateChange = jest.fn();
+  const { getFullYear } = setup({
+    onStateChange: handleStateChange,
+  });
+  const result = getFullYear();
+  expect(result).toMatchSnapshot();
+});
 
 function setup({ render: renderFn = () => <div />, ...props } = {}) {
   let renderArg;
