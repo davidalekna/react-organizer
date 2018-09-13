@@ -15,7 +15,6 @@ test('should get previews month last weeks offset days', () => {
   expect(result.year).toEqual(2018);
   expect(result.totalOffsetDays).toEqual(5);
   expect(result.days.length).toEqual(5);
-  expect(offsetDay).toMatchSnapshot();
 });
 
 test('should get current month days and events', () => {
@@ -29,7 +28,6 @@ test('should get current month days and events', () => {
   expect(result.totalDays).toEqual(30);
   expect(result.totalWeeks).toEqual(6);
   expect(result.days.length).toEqual(30);
-  expect(offsetDay).toMatchSnapshot();
 });
 
 test('should get next month first weeks offset days', () => {
@@ -45,7 +43,6 @@ test('should get next month first weeks offset days', () => {
   expect(result.year).toEqual(2018);
   expect(result.totalOffsetDays).toEqual(6);
   expect(result.days.length).toEqual(6);
-  expect(offsetDay).toMatchSnapshot();
 });
 
 test('should get full month with prev offset days and next offset days', () => {
@@ -59,7 +56,6 @@ test('should get full month with prev offset days and next offset days', () => {
   expect(result.totalWeeks).toEqual(6);
   expect(result.days.length).toEqual(6 + 30 + 6 - 1);
   expect(offsetDays.length).toEqual(6 + 6 - 1);
-  expect(offsetDays).toMatchSnapshot();
 });
 
 test('should get full calendar year', () => {
