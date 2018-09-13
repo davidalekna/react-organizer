@@ -41,8 +41,8 @@ test('should get next month first weeks offset days', () => {
   expect(result.name).toEqual('October');
   expect(result.month).toEqual(10);
   expect(result.year).toEqual(2018);
-  expect(result.totalOffsetDays).toEqual(6);
-  expect(result.days.length).toEqual(6);
+  expect(result.totalOffsetDays).toEqual(7);
+  expect(result.days.length).toEqual(7);
 });
 
 test('should get full month with prev offset days and next offset days', () => {
@@ -54,8 +54,8 @@ test('should get full month with prev offset days and next offset days', () => {
   expect(result.year).toEqual(2018);
   expect(result.totalDays).toEqual(30);
   expect(result.totalWeeks).toEqual(6);
-  expect(result.days.length).toEqual(6 + 30 + 6 - 1);
-  expect(offsetDays.length).toEqual(6 + 6 - 1);
+  expect(result.days.length).toEqual(6 + 30 + 6);
+  expect(offsetDays.length).toEqual(6 + 6);
 });
 
 test('should get full calendar year', () => {

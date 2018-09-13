@@ -215,7 +215,7 @@ export class Organizer extends React.Component {
       currentYear = currentYear + 1;
     }
     const nextMonthOffset =
-      this.getState().gridBlocks - totalOffsetDays - totalDays - 1;
+      this.getState().gridBlocks - totalOffsetDays - totalDays;
     const assignDays = Array(nextMonthOffset)
       .fill({})
       .map((c, i) => {
