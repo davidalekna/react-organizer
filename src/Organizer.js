@@ -86,13 +86,14 @@ export class Organizer extends React.Component {
   };
   static Consumer = OrganizerContext.Consumer;
   //
-  _initializeEvents = forDate => {
-    const getDate = d => format(d, 'dd/MM/yyyy');
-    const currentDate = getDate(forDate);
-    return this.props.events.filter(({ starts }) => {
-      console.log(getDate(starts));
-      console.log(currentDate);
-      return getDate(starts) === currentDate;
+  _eventsForMonth = month => {
+    return this.props.events.filter(
+      ({ starts }) => getMonth(starts) + 1 === month,
+    );
+  };
+  _initializeEvents = (events, date) => {
+    return events.filter(({ starts }) => {
+      return isSameDay(starts, date);
     });
   };
   _getWeeksInAMonth = (month, year) => {
@@ -157,6 +158,7 @@ export class Organizer extends React.Component {
           day: currentDay,
           date: date,
           offset: true,
+          events: [],
           weekend: isWeekend(date),
         };
       })
@@ -194,6 +196,7 @@ export class Organizer extends React.Component {
             day: currentDay,
             date: date,
             today: isToday === day,
+            events: [],
             weekend: isWeekend(date),
             selected: isSelected(date),
           };
@@ -220,6 +223,7 @@ export class Organizer extends React.Component {
           day: currentDay,
           date: date,
           offset: true,
+          events: [],
           weekend: isWeekend(date),
         };
       });
@@ -236,6 +240,7 @@ export class Organizer extends React.Component {
     const year = getYear(this.getState().date);
     const firstOffset = this.getPrevMonthOffset({ month, year, events });
     const current = this.getCurrentMonth({ month, year, events });
+    const eventsForMonth = this._eventsForMonth(month);
     const nextOffset = this.getNextMonthOffset({
       month,
       year,
@@ -243,15 +248,19 @@ export class Organizer extends React.Component {
       totalOffsetDays: firstOffset.totalOffsetDays,
       totalDays: current.totalDays,
     });
+
+    let result = [...firstOffset.days, ...current.days, ...nextOffset.days];
+    if (eventsForMonth.length && events) {
+      result = result.map(day => {
+        return Object.assign(day, {
+          events: this._initializeEvents(eventsForMonth, day.date),
+        });
+      });
+    }
+
     return {
       ...current,
-      days: [...firstOffset.days, ...current.days, ...nextOffset.days].map(
-        day => {
-          return Object.assign(day, {
-            events: (events && this._initializeEvents(day.date)) || null,
-          });
-        },
-      ),
+      days: result,
     };
   };
   getFullYear = events => {
