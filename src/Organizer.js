@@ -69,7 +69,7 @@ export class Organizer extends React.Component {
     initialDays: days,
     initialMonths: months,
     events: [],
-    initialGridBlocks: 42,
+    initialGridBlocks: 41,
     initialDate: new Date(),
     initialSelected: null,
   };
@@ -156,7 +156,7 @@ export class Organizer extends React.Component {
           date: date,
           offset: true,
           weekend: isWeekend(date),
-          events: events && this._initializeEvents(date),
+          events: (events && this._initializeEvents(date)) || null,
         };
       })
       .reverse();
@@ -195,7 +195,7 @@ export class Organizer extends React.Component {
             today: isToday === day,
             weekend: isWeekend(date),
             selected: isSelected(date),
-            events: events && this._initializeEvents(date),
+            events: (events && this._initializeEvents(date)) || null,
           };
         }),
     };
@@ -227,7 +227,7 @@ export class Organizer extends React.Component {
           date: date,
           offset: true,
           weekend: isWeekend(date),
-          events: events && this._initializeEvents(date),
+          events: (events && this._initializeEvents(date)) || null,
         };
       });
     return {
