@@ -1,5 +1,5 @@
 import styled from 'styled-components';
-import { FlexRow, FlexCol } from '../base';
+import { FlexRow, FlexCol } from '../globals';
 
 export const Wrapper = styled(FlexCol)`
   flex: 1 1 auto;

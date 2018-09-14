@@ -1,8 +1,8 @@
 import React from 'react';
 import Organizer from '../../../src';
 import { Grid, Wrapper, Toolbar } from './styles';
-import { Button } from '../base';
-import CalendarBase from '../base/calendarBase';
+import { Button } from '../globals';
+import CalendarBase from '../base';
 
 export const YearCalendar = () => (
   <Organizer>
@@ -28,16 +28,18 @@ export const YearCalendar = () => (
         </Toolbar>
         <Grid>
           {getFullYear().map((month, key) => (
-            <CalendarBase
-              {...{
-                key,
-                month,
-                days,
-                showNav: false,
-                weekends: true,
-                onDayClick: date => selectDate({ date }),
-              }}
-            />
+            <div key={key} style={{ padding: 15 }}>
+              <CalendarBase
+                {...{
+                  month,
+                  days,
+                  showNav: false,
+                  weekends: true,
+                  onDayClick: date => selectDate({ date }),
+                  renderToolbar: () => month.name,
+                }}
+              />
+            </div>
           ))}
         </Grid>
       </Wrapper>

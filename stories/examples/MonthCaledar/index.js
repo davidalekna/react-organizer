@@ -2,7 +2,7 @@ import React from 'react';
 import Organizer from '../../../src';
 import { Wrapper, Toolbar } from './styles';
 import { Grid, Day, Title, Number } from './styles';
-import { Button } from '../base';
+import { Button } from '../globals';
 
 export const MonthCalendar = () => (
   <Organizer>
