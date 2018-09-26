@@ -72,15 +72,15 @@ export const Day = styled(FlexRow)`
   justify-content: center;
   border: none;
   outline: none;
-  cursor: ${({ hoverable }) => hoverable && 'pointer'};
+  cursor: ${({ hoverable, past }) => !past && hoverable && 'pointer'};
   width: 40px;
   height: 40px;
   background: ${({ current, selected }) =>
     (current && '#4286f4') || (selected && '#777')};
-  color: ${({ current, weekend }) =>
-    (current && 'white') || (weekend && '#777')};
+  color: ${({ current, past }) => (current && 'white') || (past && '#ccc')};
   color: ${({ selected }) => selected && 'white'};
   &:hover {
-    background: ${({ current, hoverable }) => hoverable && !current && '#eee'};
+    background: ${({ current, past, hoverable }) =>
+      !past && hoverable && !current && '#eee'};
   }
 `;

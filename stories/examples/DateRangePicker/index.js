@@ -23,8 +23,21 @@ export class DateRangePicker extends React.Component {
   };
   state = this.initialState;
   reset = () => this.setState(this.initialState);
-  selectDateFrom = () => {};
-  selectDateUntil = () => {};
+  // selectFrom = dateFrom => this.setState({ dateFrom });
+  // selectUntil = dateUntil => this.setState({ dateUntil });
+  selectDate = date => {
+    this.setState(state => {
+      if (state.dateFrom && state.dateUntil) {
+        return { dateFrom: null, dateUntil: null };
+      }
+      if (state.dateFrom) {
+        // cannot be before start date
+        return { dateUntil: date };
+      } else {
+        return { dateFrom: date };
+      }
+    });
+  };
   addMonth = () => {
     this.setState(state => ({
       initialDate: addMonths(state.initialDate, 1),
@@ -34,12 +47,6 @@ export class DateRangePicker extends React.Component {
     this.setState(state => ({
       initialDate: subMonths(state.initialDate, 1),
     }));
-  };
-  selectFrom = dateFrom => {
-    this.setState({ dateFrom });
-  };
-  selectUntil = dateUntil => {
-    this.setState({ dateUntil });
   };
   render() {
     return (
@@ -86,10 +93,12 @@ export class DateRangePicker extends React.Component {
                     <GridItem key={index} darker={day.offset}>
                       <Day
                         current={day.today}
-                        weekend={day.weekend}
                         hoverable={!day.offset}
                         selected={day.selected}
-                        onClick={() => !day.offset && this.selectFrom(day.date)}
+                        past={day.past}
+                        onClick={() =>
+                          !day.offset && !day.past && this.selectDate(day.date)
+                        }
                       >
                         {day.day}
                       </Day>
@@ -130,11 +139,11 @@ export class DateRangePicker extends React.Component {
                     <GridItem key={index} darker={day.offset}>
                       <Day
                         current={day.today}
-                        weekend={day.weekend}
                         hoverable={!day.offset}
                         selected={day.selected}
+                        past={day.past}
                         onClick={() =>
-                          !day.offset && this.selectUntil(day.date)
+                          !day.offset && !day.past && this.selectDate(day.date)
                         }
                       >
                         {day.day}

@@ -16,6 +16,8 @@ import {
   isWeekend,
   setMonth,
   setYear,
+  isBefore,
+  getDate,
 } from 'date-fns';
 
 const OrganizerContext = React.createContext({
@@ -158,6 +160,7 @@ export class Organizer extends React.Component {
           day: currentDay,
           date: date,
           offset: true,
+          past: true,
           events: [],
           weekend: isWeekend(date),
         };
@@ -191,11 +194,13 @@ export class Organizer extends React.Component {
         .map((u, day) => {
           const currentDay = day + 1;
           const date = new Date(year, currentMonth, currentDay);
+          const today = isToday === day;
           return {
             name: this.getState().days[date.getDay()],
             day: currentDay,
             date: date,
-            today: isToday === day,
+            today,
+            past: today ? false : isBefore(date, new Date()),
             events: [],
             weekend: isWeekend(date),
             selected: isSelected(date),
@@ -223,6 +228,7 @@ export class Organizer extends React.Component {
           day: currentDay,
           date: date,
           offset: true,
+          past: false,
           events: [],
           weekend: isWeekend(date),
         };
