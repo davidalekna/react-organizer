@@ -4,8 +4,8 @@ import CalendarBase from '../base';
 import { FlexRow } from '../globals';
 import { Wrapper, Toolbar } from './styles';
 
-export const DatePicker = () => (
-  <Organizer>
+export const DatePicker = ({ onSelectDate, onReset }) => (
+  <Organizer onSelectDate={onSelectDate} onReset={onReset}>
     {({
       addCalendarMonth,
       subCalendarMonth,
