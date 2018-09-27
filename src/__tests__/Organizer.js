@@ -171,7 +171,6 @@ test('selectRange should select range', () => {
   selectRange({ date: new Date('2022', '09', '22') });
   const changes = {
     type: Organizer.stateChangeTypes.selectRange,
-    date: new Date('2022', '09', '22'),
     selected: [new Date('2022', '09', '17'), new Date('2022', '09', '22')],
   };
 
@@ -179,7 +178,6 @@ test('selectRange should select range', () => {
   expect(handleStateChange).toHaveBeenLastCalledWith(
     changes,
     expect.objectContaining({
-      date: new Date('2022', '09', '22'),
       selected: [new Date('2022', '09', '17'), new Date('2022', '09', '22')],
     }),
   );

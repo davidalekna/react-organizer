@@ -176,7 +176,7 @@ export class Organizer extends React.Component {
         day: currentDay,
         date: date,
         offset: true,
-        past: true,
+        past: isBefore(date, new Date()),
         events: [],
         weekend: isWeekend(date),
       });
@@ -243,7 +243,7 @@ export class Organizer extends React.Component {
         day: currentDay,
         date: date,
         offset: true,
-        past: false,
+        past: isBefore(date, new Date()),
         events: [],
         weekend: isWeekend(date),
       });
@@ -357,7 +357,6 @@ export class Organizer extends React.Component {
     );
   };
   selectDate = ({ type = Organizer.stateChangeTypes.selectDate, date }) => {
-    // SELECTED WILL HOLD ARRAY or Date String from now.
     this.internalSetState({ type, date, selected: date }, () => {
       return this.props.onSelectDate(this.getState().selected);
     });
@@ -369,16 +368,23 @@ export class Organizer extends React.Component {
         const selected = state.selected;
 
         if (Array.isArray(selected) && selected.length < 2) {
-          Object.assign(selectionState, {
-            selected: [...selected, date],
-          });
+          // if second date selected is before the first it will become first.
+          if (isBefore(date, selected[0])) {
+            Object.assign(selectionState, {
+              selected: [date],
+            });
+          } else {
+            Object.assign(selectionState, {
+              selected: [...selected, date],
+            });
+          }
         } else {
           Object.assign(selectionState, {
             selected: [date],
           });
         }
 
-        return Object.assign(selectionState, { date, type });
+        return Object.assign(selectionState, { type });
       },
       () => {
         return this.props.onSelectRange(this.getState().selected);
