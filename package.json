@@ -1,6 +1,6 @@
 {
   "name": "react-organizer",
-  "version": "0.0.7",
+  "version": "0.0.8",
   "description": "Organizer is a lightweight, fast and extendable render props component",
   "main": "dist/index.js",
   "repository": {
