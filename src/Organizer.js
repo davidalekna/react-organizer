@@ -54,7 +54,10 @@ export class Organizer extends React.Component {
     ),
     initialGridBlocks: PropTypes.number,
     initialDate: PropTypes.instanceOf(Date),
-    initialSelected: PropTypes.instanceOf(Date),
+    initialSelected: PropTypes.oneOfType([
+      PropTypes.instanceOf(Date),
+      PropTypes.arrayOf(PropTypes.instanceOf(Date)),
+    ]),
   };
   static defaultProps = {
     stateReducer: (state, changes) => changes,
@@ -137,6 +140,7 @@ export class Organizer extends React.Component {
     }
   };
   getPrevMonthOffset = ({ month, year }) => {
+    const assignDays = [];
     let prevMonthNumber = month - 2;
     let currentYear = year;
     if (prevMonthNumber < 0) {
@@ -150,65 +154,71 @@ export class Organizer extends React.Component {
     ).pop();
     let totalDays =
       this._getNumberOfDaysInAMonth(prevMonthNumber, currentYear) + 1;
-    const assignDays = Array(end - start)
-      .fill({})
-      .map(() => {
-        const currentDay = (totalDays -= 1);
-        const date = new Date(currentYear, prevMonthNumber, currentDay);
-        return {
-          name: this.getState().days[date.getDay()],
-          day: currentDay,
-          date: date,
-          offset: true,
-          past: true,
-          events: [],
-          weekend: isWeekend(date),
-        };
-      })
-      .reverse();
+
+    for (let i = 0; i < end - start; i += 1) {
+      const currentDay = (totalDays -= 1);
+      const date = new Date(currentYear, prevMonthNumber, currentDay);
+      assignDays.push({
+        name: this.getState().days[date.getDay()],
+        day: currentDay,
+        date: date,
+        offset: true,
+        past: true,
+        events: [],
+        weekend: isWeekend(date),
+      });
+    }
+
     return {
       name: this.getState().months[prevMonthNumber],
       month: prevMonthNumber + 1,
       year: currentYear,
       totalOffsetDays: assignDays.length,
-      days: assignDays,
+      days: assignDays.reverse(),
     };
   };
+  getSelectedDays = () => {
+    const selected = this.getState().selected;
+    if (Array.isArray(selected)) {
+    }
+  };
   getCurrentMonth = ({ month, year }) => {
+    const generatedDays = [];
     const currentMonth = month - 1;
     const totalDays = this._getNumberOfDaysInAMonth(currentMonth, year);
     const today = new Date().getDate() - 1;
-    const selected = this.getState().date.getDate() - 1;
     const isToday =
       isSameMonth(new Date(year, currentMonth, today), new Date()) && today;
     const isSelected = calendarDay =>
       isSameDay(this.getState().selected, calendarDay);
+
+    for (let i = 0; i < totalDays; i += 1) {
+      const currentDay = i + 1;
+      const date = new Date(year, currentMonth, currentDay);
+      const today = isToday === i;
+      generatedDays.push({
+        name: this.getState().days[date.getDay()],
+        day: currentDay,
+        date: date,
+        today,
+        past: today ? false : isBefore(date, new Date()),
+        events: [],
+        weekend: isWeekend(date),
+        selected: isSelected(date),
+      });
+    }
+
     return {
       name: this.getState().months[currentMonth],
       month,
       year,
       totalDays,
       totalWeeks: this._getWeeksInAMonth(currentMonth, year).length,
-      days: Array(totalDays)
-        .fill({})
-        .map((u, day) => {
-          const currentDay = day + 1;
-          const date = new Date(year, currentMonth, currentDay);
-          const today = isToday === day;
-          return {
-            name: this.getState().days[date.getDay()],
-            day: currentDay,
-            date: date,
-            today,
-            past: today ? false : isBefore(date, new Date()),
-            events: [],
-            weekend: isWeekend(date),
-            selected: isSelected(date),
-          };
-        }),
+      days: generatedDays,
     };
   };
   getNextMonthOffset = ({ month, year, totalOffsetDays, totalDays }) => {
+    const assignDays = [];
     let currentMonth = month;
     let currentYear = year;
     if (currentMonth > 11) {
@@ -218,21 +228,21 @@ export class Organizer extends React.Component {
     }
     const nextMonthOffset =
       this.getState().gridBlocks - totalOffsetDays - totalDays;
-    const assignDays = Array(nextMonthOffset)
-      .fill({})
-      .map((c, i) => {
-        const currentDay = i + 1;
-        const date = new Date(currentYear, currentMonth, currentDay);
-        return {
-          name: this.getState().days[date.getDay()],
-          day: currentDay,
-          date: date,
-          offset: true,
-          past: false,
-          events: [],
-          weekend: isWeekend(date),
-        };
+
+    for (let i = 0; i < nextMonthOffset; i += 1) {
+      const currentDay = i + 1;
+      const date = new Date(currentYear, currentMonth, currentDay);
+      assignDays.push({
+        name: this.getState().days[date.getDay()],
+        day: currentDay,
+        date: date,
+        offset: true,
+        past: false,
+        events: [],
+        weekend: isWeekend(date),
       });
+    }
+
     return {
       name: this.getState().months[currentMonth],
       month: currentMonth + 1,
@@ -257,6 +267,7 @@ export class Organizer extends React.Component {
 
     let result = [...firstOffset.days, ...current.days, ...nextOffset.days];
     if (eventsForMonth.length && events) {
+      // convert into for of
       result = result.map(day => {
         return Object.assign(day, {
           events: this._initializeEvents(eventsForMonth, day.date),
@@ -270,9 +281,10 @@ export class Organizer extends React.Component {
     };
   };
   getFullYear = events => {
-    const months = Array(13)
-      .fill({})
-      .map((u, month) => this.getFullMonth(month, events));
+    const months = [];
+    for (let i = 0; i < 13; i += 1) {
+      months.push(this.getFullMonth(i, events));
+    }
     months.shift();
     return months;
   };
@@ -339,6 +351,7 @@ export class Organizer extends React.Component {
     );
   };
   selectDate = ({ type = Organizer.stateChangeTypes.selectDate, date }) => {
+    // SELECTED WILL HOLD ARRAY or Date String from now.
     this.internalSetState({ type, date, selected: date }, () => {
       return this.props.onSelectDate(this.getState().selected);
     });
