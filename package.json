@@ -37,7 +37,8 @@
     "validate": "npm-run-all --parallel test build",
     "report-coverage": "codecov",
     "storybook": "start-storybook -p 6006",
-    "build-storybook": "build-storybook"
+    "build-storybook": "build-storybook",
+    "deploy-storybook": "storybook-to-ghpages"
   },
   "devDependencies": {
     "@babel/cli": "^7.0.0",
@@ -52,6 +53,7 @@
     "@storybook/addon-links": "^3.4.10",
     "@storybook/addons": "^3.4.10",
     "@storybook/react": "^3.4.10",
+    "@storybook/storybook-deployer": "^2.3.0",
     "babel-core": "^7.0.0-bridge.0",
     "babel-eslint": "^9.0.0",
     "babel-jest": "^23.4.2",
