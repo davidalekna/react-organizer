@@ -11,6 +11,7 @@
 [![PRs Welcome][prs-badge]][prs] 
 [![Code of Conduct][coc-badge]][coc]
 [![size][size-badge]][unpkg-dist] [![gzip size][gzip-badge]][unpkg-dist]
+[![Storybook](https://github.com/storybooks/press/blob/master/badges/storybook.svg)](https://davidalekna.github.io/react-organizer)
 
 ## The problem
 
@@ -24,6 +25,7 @@ This is a render props component that provides functionality and state managemen
 
 <!-- START doctoc generated TOC please keep comment here to allow auto update -->
 <!-- DON'T EDIT THIS SECTION, INSTEAD RE-RUN doctoc TO UPDATE -->
+
 
 - [Installation](#installation)
 - [Usage](#usage)
@@ -42,6 +44,7 @@ This is a render props component that provides functionality and state managemen
   - [addCalendarYear](#addcalendaryear)
   - [subCalendarYear](#subcalendaryear)
   - [selectDate](#selectdate)
+  - [selectRange](#selectrange)
   - [reset](#reset)
   - [selectMonth](#selectmonth)
   - [selectYear](#selectyear)
@@ -162,6 +165,12 @@ generates full year with months with previews and next months offset days
 > `function({date: object})` 
 
 selects date and adds a flag of selected on day object
+
+### selectRange
+
+> `function({date: object})` 
+
+selected state holds an array and will allow 2 dates in it
 
 ### reset
 
