@@ -36,6 +36,7 @@ const OrganizerContext = React.createContext({
   addCalendarYear: () => {},
   subCalendarYear: () => {},
   selectDate: () => {},
+  selectRange: () => {},
   reset: () => {},
   selectMonth: () => {},
   selectYear: () => {},
@@ -64,6 +65,7 @@ export class Organizer extends React.Component {
     onStateChange: () => {},
     onReset: () => {},
     onSelectDate: () => {},
+    onSelectRange: () => {},
     onAddCalendarYear: () => {},
     onSubCalendarYear: () => {},
     onSubCalendarMonth: () => {},
@@ -81,6 +83,7 @@ export class Organizer extends React.Component {
   static stateChangeTypes = {
     reset: '__reset__',
     selectDate: '__select_date__',
+    selectRange: '__select_range__',
     addCalendarMonth: '__add_calendar_month__',
     subCalendarMonth: '__subtract_calendar_month__',
     addCalendarYear: '__add_calendar_year__',
@@ -119,6 +122,16 @@ export class Organizer extends React.Component {
   _getNumberOfDaysInAMonth(month, year) {
     return new Date(year, month + 1, 0).getDate();
   }
+  _isDaySelected = calendarDay => {
+    const selected = this.getState().selected;
+    if (selected && selected instanceof Date) {
+      return isSameDay(this.getState().selected, calendarDay);
+    }
+    if (Array.isArray(selected)) {
+      return selected.map(s => isSameDay(s, calendarDay)).includes(true);
+    }
+    return false;
+  };
   changeLanguage = ({
     type = Organizer.stateChangeTypes.changeLanguage,
     days,
@@ -177,11 +190,6 @@ export class Organizer extends React.Component {
       days: assignDays.reverse(),
     };
   };
-  getSelectedDays = () => {
-    const selected = this.getState().selected;
-    if (Array.isArray(selected)) {
-    }
-  };
   getCurrentMonth = ({ month, year }) => {
     const generatedDays = [];
     const currentMonth = month - 1;
@@ -189,8 +197,6 @@ export class Organizer extends React.Component {
     const today = new Date().getDate() - 1;
     const isToday =
       isSameMonth(new Date(year, currentMonth, today), new Date()) && today;
-    const isSelected = calendarDay =>
-      isSameDay(this.getState().selected, calendarDay);
 
     for (let i = 0; i < totalDays; i += 1) {
       const currentDay = i + 1;
@@ -204,7 +210,7 @@ export class Organizer extends React.Component {
         past: today ? false : isBefore(date, new Date()),
         events: [],
         weekend: isWeekend(date),
-        selected: isSelected(date),
+        selected: this._isDaySelected(date),
       });
     }
 
@@ -356,6 +362,29 @@ export class Organizer extends React.Component {
       return this.props.onSelectDate(this.getState().selected);
     });
   };
+  selectRange = ({ type = Organizer.stateChangeTypes.selectRange, date }) => {
+    this.internalSetState(
+      state => {
+        let selectionState = {};
+        const selected = state.selected;
+
+        if (Array.isArray(selected) && selected.length < 2) {
+          Object.assign(selectionState, {
+            selected: [...selected, date],
+          });
+        } else {
+          Object.assign(selectionState, {
+            selected: [date],
+          });
+        }
+
+        return Object.assign(selectionState, { date, type });
+      },
+      () => {
+        return this.props.onSelectRange(this.getState().selected);
+      },
+    );
+  };
   reset = () => {
     this.internalSetState(
       { ...this.initialState, type: Organizer.stateChangeTypes.reset },
@@ -380,6 +409,7 @@ export class Organizer extends React.Component {
     addCalendarYear: this.addCalendarYear,
     subCalendarYear: this.subCalendarYear,
     selectDate: this.selectDate,
+    selectRange: this.selectRange,
     reset: this.reset,
     selectMonth: this.selectMonth,
     selectYear: this.selectYear,

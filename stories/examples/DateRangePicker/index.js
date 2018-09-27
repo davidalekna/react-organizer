@@ -23,21 +23,19 @@ export class DateRangePicker extends React.Component {
   };
   state = this.initialState;
   reset = () => this.setState(this.initialState);
-  // selectFrom = dateFrom => this.setState({ dateFrom });
-  // selectUntil = dateUntil => this.setState({ dateUntil });
-  selectDate = date => {
-    this.setState(state => {
-      if (state.dateFrom && state.dateUntil) {
-        return { dateFrom: null, dateUntil: null };
-      }
-      if (state.dateFrom) {
-        // cannot be before start date
-        return { dateUntil: date };
-      } else {
-        return { dateFrom: date };
-      }
-    });
-  };
+  // selectDate = date => {
+  //   this.setState(state => {
+  //     if (state.dateFrom && state.dateUntil) {
+  //       return { dateFrom: null, dateUntil: null };
+  //     }
+  //     if (state.dateFrom) {
+  //       // cannot be before start date
+  //       return { dateUntil: date };
+  //     } else {
+  //       return { dateFrom: date };
+  //     }
+  //   });
+  // };
   addMonth = () => {
     this.setState(state => ({
       initialDate: addMonths(state.initialDate, 1),
@@ -71,9 +69,9 @@ export class DateRangePicker extends React.Component {
         <DoubleCalendar>
           <Organizer
             date={this.state.initialDate}
-            selected={this.state.dateFrom}
+            // selected={this.state.dateFrom}
           >
-            {({ days, months, date, getFullMonth }) => (
+            {({ days, months, date, getFullMonth, selectRange }) => (
               <CalendarWrapper>
                 <Toolbar>
                   <Button left={0} onClick={this.subMonth}>
@@ -97,7 +95,9 @@ export class DateRangePicker extends React.Component {
                         selected={day.selected}
                         past={day.past}
                         onClick={() =>
-                          !day.offset && !day.past && this.selectDate(day.date)
+                          !day.offset &&
+                          !day.past &&
+                          selectRange({ date: day.date })
                         }
                       >
                         {day.day}
@@ -110,7 +110,8 @@ export class DateRangePicker extends React.Component {
           </Organizer>
           <Organizer
             date={addMonths(this.state.initialDate, 1)}
-            selected={this.state.dateUntil}
+            onRangeSelect={d => console.log(d)}
+            // selected={this.state.dateUntil}
           >
             {({
               addCalendarMonth,
@@ -119,6 +120,7 @@ export class DateRangePicker extends React.Component {
               months,
               date,
               getFullMonth,
+              selectRange,
             }) => (
               <CalendarWrapper>
                 <Toolbar>
@@ -143,7 +145,9 @@ export class DateRangePicker extends React.Component {
                         selected={day.selected}
                         past={day.past}
                         onClick={() =>
-                          !day.offset && !day.past && this.selectDate(day.date)
+                          !day.offset &&
+                          !day.past &&
+                          selectRange({ date: day.date })
                         }
                       >
                         {day.day}

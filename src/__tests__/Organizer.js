@@ -162,6 +162,29 @@ test('should select requested date', () => {
   );
 });
 
+test('selectRange should select range', () => {
+  const handleStateChange = jest.fn();
+  const { selectRange } = setup({
+    onStateChange: handleStateChange,
+  });
+  selectRange({ date: new Date('2022', '09', '17') });
+  selectRange({ date: new Date('2022', '09', '22') });
+  const changes = {
+    type: Organizer.stateChangeTypes.selectRange,
+    date: new Date('2022', '09', '22'),
+    selected: [new Date('2022', '09', '17'), new Date('2022', '09', '22')],
+  };
+
+  expect(handleStateChange).toHaveBeenCalledTimes(2);
+  expect(handleStateChange).toHaveBeenLastCalledWith(
+    changes,
+    expect.objectContaining({
+      date: new Date('2022', '09', '22'),
+      selected: [new Date('2022', '09', '17'), new Date('2022', '09', '22')],
+    }),
+  );
+});
+
 test('should select requested month', () => {
   const handleStateChange = jest.fn();
   const { selectMonth } = setup({
