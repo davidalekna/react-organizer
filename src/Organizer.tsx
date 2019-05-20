@@ -1,30 +1,29 @@
-import React from 'react';
-import PropTypes from 'prop-types';
-import hoistNonReactStatics from 'hoist-non-react-statics';
-import { days, months } from './utils';
+import * as React from 'react';
+import * as PropTypes from 'prop-types';
+import * as hoistNonReactStatics from 'hoist-non-react-statics';
 import {
-  format,
   getYear,
   getMonth,
   addMonths,
   subMonths,
   isSameMonth,
   isSameDay,
-  eachDayOfInterval,
   addYears,
   subYears,
   isWeekend,
   setMonth,
   setYear,
   isBefore,
-  getDate,
 } from 'date-fns';
+import { days, months } from './utils';
+import { Props, State, IWeek } from './types';
 
-const OrganizerContext = React.createContext({
+export const OrganizerContext = React.createContext<State>({
   days: [],
   months: [],
   date: new Date(),
   selected: null,
+  gridBlocks: 0,
   // functions
   getPrevMonthOffset: () => {},
   getNextMonthOffset: () => {},
@@ -43,7 +42,7 @@ const OrganizerContext = React.createContext({
   changeLanguage: () => {},
 });
 
-export class Organizer extends React.Component {
+export class Organizer extends React.Component<Props, State> {
   static propTypes = {
     children: PropTypes.func,
     initialDays: PropTypes.array,
@@ -61,7 +60,7 @@ export class Organizer extends React.Component {
     ]),
   };
   static defaultProps = {
-    stateReducer: (state, changes) => changes,
+    stateReducer: (state: State, changes: unknown) => changes,
     onStateChange: () => {},
     onReset: () => {},
     onSelectDate: () => {},
@@ -94,18 +93,18 @@ export class Organizer extends React.Component {
   };
   static Consumer = OrganizerContext.Consumer;
   //
-  _eventsForMonth = month => {
+  private _eventsForMonth = month => {
     return this.props.events.filter(
       ({ starts }) => getMonth(starts) + 1 === month,
     );
   };
-  _initializeEvents = (events, date) => {
+  private _initializeEvents = (events, date) => {
     return events.filter(({ starts }) => {
       return isSameDay(starts, date);
     });
   };
-  _getWeeksInAMonth = (month, year) => {
-    const weeks = [];
+  private _getWeeksInAMonth = (month, year): IWeek[] => {
+    const weeks: IWeek[] = [];
     const firstDate = new Date(year, month, 1);
     const lastDate = new Date(year, month + 1, 0);
     const numDays = lastDate.getDate();
@@ -119,10 +118,10 @@ export class Organizer extends React.Component {
     }
     return weeks;
   };
-  _getNumberOfDaysInAMonth(month, year) {
+  private _getNumberOfDaysInAMonth(month, year) {
     return new Date(year, month + 1, 0).getDate();
   }
-  _isDaySelected = calendarDay => {
+  private _isDaySelected = calendarDay => {
     const selected = this.getState().selected;
     if (selected && selected instanceof Date) {
       return isSameDay(this.getState().selected, calendarDay);
@@ -152,8 +151,8 @@ export class Organizer extends React.Component {
       );
     }
   };
-  getPrevMonthOffset = ({ month, year }) => {
-    const assignDays = [];
+  getPrevMonthOffset = ({ month, year, events }) => {
+    const assignDays: any = [];
     let prevMonthNumber = month - 2;
     let currentYear = year;
     if (prevMonthNumber < 0) {
@@ -161,7 +160,7 @@ export class Organizer extends React.Component {
       prevMonthNumber = 11;
       currentYear = currentYear - 1;
     }
-    const { end, start } = this._getWeeksInAMonth(
+    const { end, start }: any = this._getWeeksInAMonth(
       prevMonthNumber,
       currentYear,
     ).pop();
@@ -190,8 +189,8 @@ export class Organizer extends React.Component {
       days: assignDays.reverse(),
     };
   };
-  getCurrentMonth = ({ month, year }) => {
-    const generatedDays = [];
+  getCurrentMonth = ({ month, year, events }) => {
+    const generatedDays: any = [];
     const currentMonth = month - 1;
     const totalDays = this._getNumberOfDaysInAMonth(currentMonth, year);
     const today = new Date().getDate() - 1;
@@ -223,8 +222,14 @@ export class Organizer extends React.Component {
       days: generatedDays,
     };
   };
-  getNextMonthOffset = ({ month, year, totalOffsetDays, totalDays }) => {
-    const assignDays = [];
+  getNextMonthOffset = ({
+    month,
+    year,
+    totalOffsetDays,
+    totalDays,
+    events,
+  }) => {
+    const assignDays: any = [];
     let currentMonth = month;
     let currentYear = year;
     if (currentMonth > 11) {
@@ -287,7 +292,7 @@ export class Organizer extends React.Component {
     };
   };
   getFullYear = events => {
-    const months = [];
+    const months: any = [];
     for (let i = 0; i < 13; i += 1) {
       months.push(this.getFullMonth(i, events));
     }
@@ -422,10 +427,10 @@ export class Organizer extends React.Component {
     changeLanguage: this.changeLanguage,
   };
   state = this.initialState;
-  isControlledProp(key) {
+  isControlledProp(key: string) {
     return this.props[key] !== undefined;
   }
-  getState(stateToMerge = this.state) {
+  getState(stateToMerge: State = this.state): any {
     return Object.keys(stateToMerge).reduce((state, key) => {
       state[key] = this.isControlledProp(key)
         ? this.props[key]
@@ -488,4 +493,9 @@ export function withOrganizer(Component) {
     Component.name})`;
   hoistNonReactStatics(Wrapper, Component);
   return Wrapper;
+}
+
+export function useOrganizer() {
+  const organizerUtils = React.useContext(OrganizerContext);
+  return organizerUtils;
 }
