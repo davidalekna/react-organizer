@@ -1,5 +1,5 @@
 import React from 'react';
-import Organizer from '../../../src';
+import Organizer from '../../..';
 import CalendarBase from '../base';
 import { FlexRow } from '../globals';
 import { Wrapper, Toolbar } from './styles';

@@ -1,5 +1,5 @@
 import React from 'react';
-import Organizer from '../../../src';
+import Organizer from '../../..';
 import { Grid, Wrapper, Toolbar } from './styles';
 import { Button } from '../globals';
 import CalendarBase from '../base';

@@ -5,7 +5,7 @@ import GlobalStyle from './reset.css';
 import theme from './theme';
 
 const req = require.context(
-  '../stories/',
+  '../src/__stories__/',
   true,
   /.*\.(stories|story)\.(js|ts|tsx)?$/,
 );

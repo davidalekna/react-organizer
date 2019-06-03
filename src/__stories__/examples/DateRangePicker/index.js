@@ -1,5 +1,5 @@
 import React from 'react';
-import Organizer from '../../../src';
+import Organizer from '../../..';
 import { addMonths, getMonth } from 'date-fns';
 import { FlexRow } from '../globals';
 import {

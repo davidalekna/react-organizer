@@ -17,9 +17,9 @@
     "outDir": "lib",
     "lib": ["es2018", "dom"]
   },
+  "include": ["src/**/*.ts", "src/**/*.tsx"],
   "exclude": [
     "node_modules",
-    "stories",
     "lib",
     "**/__components__/**/*",
     "**/__mocks__/**/*",
