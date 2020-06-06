@@ -1,9 +1,57 @@
 import { useReducer } from 'react';
 import { uk } from 'date-fns/locale';
-import { toDate } from 'date-fns';
-import { days, months } from './utils';
+import {
+  days,
+  months,
+  getNumberOfWeeksInAMonth,
+  getNumberOfDaysInAMonth,
+  isDaySelected,
+  initEventsForDate,
+  getEventsForMonth,
+} from './utils';
+import {
+  getYear,
+  getMonth,
+  addMonths,
+  subMonths,
+  isSameMonth,
+  isSameDay,
+  addYears,
+  subYears,
+  isWeekend,
+  setMonth,
+  setYear,
+  isBefore,
+  isAfter,
+  toDate,
+  format,
+} from 'date-fns';
 
-export type CalendarToolsState = {};
+export type Day = {
+  date: Date;
+  formatted: string;
+  name: string;
+  day: number;
+  events: Event[];
+  status: {
+    past: boolean;
+    future: boolean;
+    weekend: boolean;
+    selected?: boolean;
+    offset?: boolean;
+    today?: boolean;
+  };
+};
+
+export type CalendarToolsState = {
+  daysNames: string[];
+  monthsNames: string[];
+  days: Day[];
+  now: Date;
+  selected: Date | null;
+  gridOf: number;
+  type?: any; // this is for passing a ref on an updated item
+};
 
 export type Action = { type: string; payload?: any };
 export type ReducerProps<S, A> = (prevState: S, action: A) => S;
@@ -12,10 +60,283 @@ export const calendarToolsReducer: ReducerProps<CalendarToolsState, Action> = (
   action,
 ) => {
   switch (action.type) {
-    case '':
+    case actionTypes.changeLanguage: {
+      const { days, months } = action.payload;
+      // NOTE: maybe days and months could be retrieved from date-fns locale?
+      return {
+        daysNames: days,
+        monthsNames: months,
+      };
+    }
+    case actionTypes.getPrevMonthOffset: {
+      const { daysNames, monthsNames } = state;
+      const { month, year, format, locale } = action.payload;
+
+      const assignDays: Day[] = [];
+      let prevMonthNumber = month - 2;
+      let currentYear = year;
+      if (prevMonthNumber < 0) {
+        // check if previews year
+        prevMonthNumber = 11;
+        currentYear = currentYear - 1;
+      }
+      const { end, start } = getNumberOfWeeksInAMonth(
+        prevMonthNumber,
+        currentYear,
+      ).pop();
+      let totalDays = getNumberOfDaysInAMonth(prevMonthNumber, currentYear) + 1;
+
+      for (let i = 0; i < end - start; i += 1) {
+        const currentDay = (totalDays -= 1);
+        const date = new Date(currentYear, prevMonthNumber, currentDay);
+        const todaysDate = new Date();
+        assignDays.push({
+          date: toDate(date),
+          formatted: format(date, format, { locale }),
+          name: daysNames[date.getDay()],
+          day: currentDay,
+          events: [],
+          status: {
+            past: isBefore(date, todaysDate),
+            future: isAfter(date, todaysDate),
+            offset: true,
+            weekend: isWeekend(date),
+          },
+        });
+      }
+
+      return {
+        ...state,
+        name: monthsNames[prevMonthNumber],
+        month: prevMonthNumber + 1,
+        year: currentYear,
+        totalOffsetDays: assignDays.length,
+        days: assignDays.reverse(),
+      };
+    }
+    case actionTypes.getCurrentMonth: {
+      const { daysNames, monthsNames } = state;
+      const { selected, month, year, format, locale } = action.payload;
+
+      const generatedDays: Day[] = [];
+      const currentMonth = month - 1; // back to 0 index
+      const totalDays = getNumberOfDaysInAMonth(currentMonth, year);
+      const today = new Date().getDate() - 1;
+      // ERROR: the problem happens when it's the 1st day of the month, then
+      // it thinks that it's one month forward from current month.
+      const now =
+        isSameMonth(
+          new Date(year, today === 0 ? month : currentMonth, today),
+          new Date(),
+        ) && today;
+
+      for (let i = 0; i < totalDays; i += 1) {
+        const currentDay = i + 1;
+        const date = new Date(year, currentMonth, currentDay);
+        const thisIsToday = now === i;
+        const todaysDate = new Date();
+        generatedDays.push({
+          date: toDate(date),
+          formatted: format(date, format, {
+            locale: locale,
+          }),
+          name: daysNames[date.getDay()],
+          day: currentDay,
+          events: [],
+          status: {
+            past: thisIsToday ? false : isBefore(date, todaysDate),
+            future: thisIsToday ? false : isAfter(date, todaysDate),
+            weekend: isWeekend(date),
+            selected: isDaySelected(selected, date),
+            today: thisIsToday,
+          },
+        });
+      }
+
+      return {
+        ...state,
+        name: monthsNames[currentMonth],
+        month,
+        year,
+        totalDays,
+        totalWeeks: getNumberOfWeeksInAMonth(currentMonth, year).length,
+        days: generatedDays,
+      };
+    }
+    case actionTypes.getNextMonthOffset: {
+      const { daysNames, monthsNames } = state;
+      const {
+        gridOf,
+        totalOffsetDays,
+        totalDays,
+        month,
+        year,
+        format,
+        locale,
+      } = action.payload;
+
+      const assignDays: Day[] = [];
+      let currentMonth = month;
+      let currentYear = year;
+      if (currentMonth > 11) {
+        // check if next year
+        currentMonth = 0;
+        currentYear = currentYear + 1;
+      }
+      const nextMonthOffset = gridOf - totalOffsetDays - totalDays;
+
+      for (let i = 0; i < nextMonthOffset; i += 1) {
+        const currentDay = i + 1;
+        const date = new Date(currentYear, currentMonth, currentDay);
+        const todaysDate = new Date();
+        assignDays.push({
+          date: toDate(date),
+          formatted: format(date, format, {
+            locale: locale,
+          }),
+          name: daysNames[date.getDay()],
+          day: currentDay,
+          events: [],
+          status: {
+            past: isBefore(date, todaysDate),
+            future: isAfter(date, todaysDate),
+            weekend: isWeekend(date),
+            offset: true,
+          },
+        });
+      }
+
+      return {
+        ...state,
+        name: monthsNames[currentMonth],
+        month: currentMonth + 1,
+        year: currentYear,
+        totalOffsetDays: assignDays.length,
+        days: assignDays,
+      };
+    }
+    case actionTypes.getFullMonth: {
+      const { now } = state;
+      const { m, events } = action.payload;
+      // month index starts from 1
+      const month = m ? m : getMonth(now) + 1;
+      const year = getYear(now);
+
+      // TODO: figure out how to solve following 🙇🏼‍♂️🐑
+      // I believe that getPrevMonthOffset, getCurrentMonth and getNextMonthOffset
+      // should be outside functions because they should be re-usable
+
+      const firstOffset = this.getPrevMonthOffset({ month, year, events });
+      const current = this.getCurrentMonth({ month, year, events });
+      const eventsForMonth = getEventsForMonth(events, month);
+      const nextOffset = this.getNextMonthOffset({
+        month,
+        year,
+        events,
+        totalOffsetDays: firstOffset.totalOffsetDays,
+        totalDays: current.totalDays,
+      });
+
+      let result = [...firstOffset.days, ...current.days, ...nextOffset.days];
+      if (eventsForMonth.length && events) {
+        // NOTE: cannot load async because it is used for render... bad architecture...
+        // convert into for of
+        result = result.map((day) => {
+          return Object.assign(day, {
+            events: initEventsForDate(eventsForMonth, day.date),
+          });
+        });
+      }
+      // TODO END: move off to the SW
+
+      return {
+        ...state,
+        ...current,
+        days: result,
+      };
+    }
+    case actionTypes.addCalendarMonth: {
+      return {
+        ...state,
+        now: addMonths(state.now, 1),
+      };
+    }
+    case actionTypes.subCalendarMonth: {
+      const { month } = action.payload;
+      return {
+        ...state,
+        now: setMonth(state.now, month),
+      };
+    }
+    case actionTypes.addCalendarYear: {
+      return {
+        ...state,
+        now: addYears(state.now, 1),
+      };
+    }
+    case actionTypes.subCalendarYear: {
+      return {
+        ...state,
+        now: subYears(state.now, 1),
+      };
+    }
+    case actionTypes.selectDate: {
+      const { date } = action.payload;
+      return {
+        ...state,
+        date,
+        selected: date,
+      };
+    }
+    case actionTypes.selectRange: {
+      const { date, range } = action.payload;
+
+      let selectionState = {};
+      const selected = state.selected;
+      // ability to initially select dates
+      if (range && Array.isArray(range) && range.length === 2) {
+        return {
+          selected: range,
+        };
+      }
+      // ability to select dates one by one
+      if (Array.isArray(selected) && selected.length < 2) {
+        // if second date selected is before the first it will become first.
+        if (isBefore(date, selected[0])) {
+          Object.assign(selectionState, {
+            selected: [date],
+          });
+        } else {
+          Object.assign(selectionState, {
+            selected: [...selected, date],
+          });
+        }
+      } else {
+        Object.assign(selectionState, {
+          selected: [date],
+        });
+      }
+
+      return {
+        ...state,
+        ...selectionState,
+      };
+    }
+    case actionTypes.selectMonth: {
+      return {
+        ...state,
+        now: setMonth(state.now, action.payload.month),
+      };
+    }
+    case actionTypes.selectYear: {
+      return {
+        ...state,
+        now: setYear(state.now, action.payload.year),
+      };
+    }
+    default: {
       return state;
-    default:
-      return state;
+    }
   }
 };
 
@@ -24,7 +345,6 @@ export const actionTypes = {
   getNextMonthOffset: 'getNextMonthOffset',
   getCurrentMonth: 'getCurrentMonth',
   getFullMonth: 'getFullMonth',
-  getFullYear: 'getFullYear',
   addCalendarMonth: 'addCalendarMonth',
   subCalendarMonth: 'subCalendarMonth',
   addCalendarYear: 'addCalendarYear',
@@ -64,83 +384,105 @@ export const useCalendarTools = (
   reducer = calendarToolsReducer,
 ) => {
   const [state, send] = useReducer(reducer, {
-    days: daysNames,
-    months: monthsNames,
+    daysNames,
+    monthsNames,
+    days: [],
     gridOf: initialGridOf,
     now: initialDate,
     selected: initialSelected,
   });
 
-  const _initEventsForDate = (events: Event[], date: Date) => {
-    return events.filter(({ starts }) => {
-      return isSameDay(starts, date);
+  const changeLanguage = ({ days, months }: any) => {
+    send({ type: actionTypes.changeLanguage, payload: { days, months } });
+  };
+
+  const getPrevMonthOffset = ({ month, year, events }: any) => {
+    send({
+      type: actionTypes.getPrevMonthOffset,
+      payload: { month, year, events, format, locale },
     });
   };
-  const _getEventsForMonth = (month: number) => {
-    return this.props.events.filter(
-      ({ starts }) => getMonth(starts) + 1 === month,
-    );
-  };
-  const _getNumberOfWeeksInAMonth = (month: number, year: number): Week[] => {
-    const weeks: Week[] = [];
-    const firstDate = new Date(year, month, 1);
-    const lastDate = new Date(year, month + 1, 0);
-    const numDays = lastDate.getDate();
-    let start = 1;
-    let end = 7 - firstDate.getDay();
-    while (start <= numDays) {
-      weeks.push({ start, end });
-      start = end + 1;
-      end = end + 7;
-      if (end > numDays) end = numDays;
-    }
-    return weeks;
-  };
-  const _getNumberOfDaysInAMonth = (month: number, year: number) => {
-    return new Date(year, month + 1, 0).getDate();
-  };
-  const _isDaySelected = (calendarDay: Date) => {
-    const selected = this.getState().selected;
-    if (selected && selected instanceof Date) {
-      return isSameDay(this.getState().selected, calendarDay);
-    }
-    if (Array.isArray(selected)) {
-      return selected.map((s) => isSameDay(s, calendarDay)).includes(true);
-    }
-    return false;
+
+  const getCurrentMonth = ({ month, year, events }: any) => {
+    send({
+      type: actionTypes.getCurrentMonth,
+      payload: { month, year, events, format, locale },
+    });
   };
 
-  const changeLanguage = ({ days, months }: any) => {
-    if (days.length === 7 && months.length === 12) {
-      this.internalSetState(
-        () => ({ days, months }),
-        () =>
-          this.props.onChangeLanguage({
-            days: this.getState().days,
-            months: this.getState().months,
-          }),
-      );
-    } else {
-      throw new Error(
-        `changeLanguage: Not enough days ${days.length} or months ${months.length}`,
-      );
-    }
+  const getNextMonthOffset = ({
+    month,
+    year,
+    totalOffsetDays,
+    totalDays,
+    events,
+  }: any) => {
+    send({
+      type: actionTypes.getNextMonthOffset,
+      payload: {
+        month,
+        year,
+        totalOffsetDays,
+        totalDays,
+        events,
+        format,
+        locale,
+      },
+    });
   };
 
-  const getPrevMonthOffset = () => {};
-  const getNextMonthOffset = () => {};
-  const getCurrentMonth = () => {};
-  const getFullMonth = () => {};
-  const getFullYear = () => {};
-  const addCalendarMonth = () => {};
-  const subCalendarMonth = () => {};
-  const addCalendarYear = () => {};
-  const subCalendarYear = () => {};
-  const selectDate = () => {};
-  const selectRange = () => {};
-  const reset = () => {};
-  const selectMonth = () => {};
-  const selectYear = () => {};
+  const getFullMonth = (m?: number, events?: Event[]) => {
+    send({
+      type: actionTypes.getFullMonth,
+      payload: { m, events },
+    });
+  };
+
+  const getFullYear = (events: Event[]) => {
+    // ERROR: this function wont work!! Look above...
+    const months: any = [];
+    for (let i = 0; i < 13; i += 1) {
+      months.push(getFullMonth(i, events));
+    }
+    months.shift();
+    return months;
+  };
+
+  const addCalendarMonth = () => {
+    send({ type: actionTypes.addCalendarMonth });
+  };
+
+  const subCalendarMonth = ({ month }: any) => {
+    send({ type: actionTypes.subCalendarMonth, payload: { month } });
+  };
+
+  const addCalendarYear = () => {
+    send({ type: actionTypes.addCalendarYear });
+  };
+
+  const subCalendarYear = () => {
+    send({ type: actionTypes.subCalendarYear });
+  };
+
+  const selectDate = ({ date }: any) => {
+    send({ type: actionTypes.selectDate, payload: { date } });
+  };
+
+  const selectRange = ({ date, range }: any) => {
+    send({ type: actionTypes.selectRange, payload: { date, range } });
+  };
+
+  const reset = () => {
+    // TODO
+  };
+
+  const selectMonth = ({ month }: any) => {
+    send({ type: actionTypes.selectMonth, payload: { month } });
+  };
+
+  const selectYear = ({ year }: any) => {
+    send({ type: actionTypes.selectYear, payload: { year } });
+  };
 
   return Object.assign(state, {
     changeLanguage,
