@@ -1,4 +1,4 @@
-export const callAll = (...fns) => (...args) =>
+export const callAll = (...fns: Function[]) => (...args: Function[]) =>
   fns.forEach(fn => fn && fn(...args));
 
 export const days = [

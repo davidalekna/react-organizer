@@ -1,20 +1,19 @@
-const ignores = [
-  '/node_modules/',
-  '/fixtures/',
-  '/__tests__/helpers/',
-  '__mocks__',
-];
+const ignores = ['/node_modules/', '/lib/'];
 
 module.exports = {
-  testPathIgnorePatterns: [...ignores],
-  testMatch: ['**/__tests__/**/*.+(js|jsx|ts|tsx)'],
-  coveragePathIgnorePatterns: [...ignores],
-  coverageThreshold: {
-    global: {
-      branches: 71,
-      functions: 63,
-      lines: 80,
-      statements: 85,
-    },
+  transform: {
+    '.(ts|tsx)': 'ts-jest',
   },
+  testRegex: '(/__tests__/.*|(\\.|/)(test|spec))\\.tsx?$',
+  moduleFileExtensions: ['ts', 'tsx', 'js', 'json'],
+  coveragePathIgnorePatterns: [...ignores],
+  // coverageThreshold: {
+  //   global: {
+  //     branches: 35,
+  //     functions: 60,
+  //     lines: 70,
+  //     statements: 70,
+  //   },
+  // },
+  testPathIgnorePatterns: [...ignores],
 };

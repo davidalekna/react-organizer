@@ -1,92 +1,89 @@
 {
-  "name": "react-organizer",
-  "version": "0.0.8",
-  "description": "Organizer is a lightweight, fast and extendable render props component",
-  "main": "dist/index.js",
-  "repository": {
-    "type": "git",
-    "url": "https://github.com/davidalekna/react-organizer.git"
-  },
-  "bugs": {
-    "url": "https://github.com/davidalekna/react-organizer/issues"
-  },
-  "homepage": "https://github.com/davidalekna/react-organizer#readme",
-  "keywords": [
-    "react",
-    "react-component",
-    "component",
-    "calendar",
-    "date-picker",
-    "datepicker",
-    "date",
-    "picker",
-    "event",
-    "events manager",
-    "date-fns",
-    "calendar",
-    "render-props"
-  ],
+  "name": "use-calendar-tools",
+  "version": "1.0.0",
+  "description": "react hook for building powerful calendar components",
   "author": "David Alekna <alekna@live.co.uk>",
   "license": "MIT",
+  "main": "./lib/index.cjs.js",
+  "module": "./lib/index.js",
+  "types": "./lib/index.d.ts",
+  "files": [
+    "lib/*"
+  ],
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/davidalekna/use-table-tools.git"
+  },
+  "bugs": {
+    "url": "https://github.com/davidalekna/use-table-tools/issues"
+  },
+  "homepage": "https://github.com/davidalekna/use-table-tools#readme",
+  "keywords": [
+    "react",
+    "component",
+    "calendar",
+    "datepicker",
+    "date",
+    "event",
+    "events manager",
+    "react hooks"
+  ],
   "scripts": {
-    "prebuild": "rimraf dist",
-    "build": "babel src -d dist",
+    "prebuild": "npm run clean",
+    "build": "tsc",
+    "postbuild": "npm run bundle",
+    "clean": "rimraf -r dist coverage lib",
+    "bundle": "rollup -c ./config/rollup.config.js",
+    "predeploy": "npm run build",
+    "deploy": "cd dist && npm publish --tag beta",
     "test": "jest --coverage",
     "test:watch": "jest --watch",
-    "prepare": "npm run build",
-    "validate": "npm-run-all --parallel test build",
+    "start": "yarn docz:dev",
+    "docz:dev": "docz dev",
+    "docz:build": "docz build",
+    "docz:serve": "docz build && docz serve",
     "report-coverage": "codecov",
-    "storybook": "start-storybook -p 6006",
-    "build-storybook": "build-storybook",
-    "deploy-storybook": "storybook-to-ghpages"
-  },
-  "devDependencies": {
-    "@babel/cli": "^7.1.2",
-    "@babel/core": "^7.1.2",
-    "@babel/plugin-proposal-class-properties": "^7.1.0",
-    "@babel/plugin-proposal-logical-assignment-operators": "^7.0.0",
-    "@babel/plugin-proposal-object-rest-spread": "^7.0.0",
-    "@babel/plugin-syntax-object-rest-spread": "^7.0.0",
-    "@babel/preset-env": "^7.1.0",
-    "@babel/preset-react": "^7.0.0",
-    "@storybook/addon-actions": "^3.4.11",
-    "@storybook/addon-links": "^3.4.11",
-    "@storybook/addons": "^3.4.11",
-    "@storybook/react": "^3.4.11",
-    "@storybook/storybook-deployer": "^2.3.0",
-    "@types/react": "^16.4.14",
-    "babel-core": "^7.0.0-bridge.0",
-    "babel-eslint": "^9.0.0",
-    "babel-jest": "^23.4.2",
-    "babel-runtime": "^6.26.0",
-    "codecov": "^3.0.4",
-    "eslint": "^5.6.1",
-    "eslint-plugin-import": "^2.14.0",
-    "eslint-plugin-jsx-a11y": "^6.1.1",
-    "eslint-plugin-react": "^7.11.1",
-    "eslint-watch": "^4.0.2",
-    "ghooks": "^2.0.4",
-    "jest": "^23.5.0",
-    "npm-run-all": "^4.1.3",
-    "prop-types": "^15.6.2",
-    "react": "^16.5.2",
-    "react-dom": "^16.5.2",
-    "react-testing-library": "^5.1.0"
+    "format": "pretty-quick --pattern \"./packages/**/*.*(js|ts|tsx)\""
   },
   "peerDependencies": {
-    "prop-types": "^15.6.0",
-    "react": "^15.3.0 || ^16.0.0-0"
+    "react": ">=16.8.0"
   },
-  "files": [
-    "dist"
-  ],
-  "config": {
-    "ghooks": {
-      "pre-commit": "npm run validate"
+  "devDependencies": {
+    "@babel/core": "^7.10.2",
+    "@babel/preset-env": "^7.10.2",
+    "@rollup/plugin-node-resolve": "^8.0.0",
+    "@testing-library/jest-dom": "^5.9.0",
+    "@testing-library/react": "^10.2.0",
+    "@testing-library/react-hooks": "^3.3.0",
+    "@types/jest": "^25.2.3",
+    "@types/react": "^16.9.35",
+    "@types/react-dom": "^16.9.8",
+    "babel-jest": "^26.0.1",
+    "babel-loader": "^8.1.0",
+    "codecov": "^3.7.0",
+    "husky": "^4.2.5",
+    "jest": "^26.0.1",
+    "prettier": "^2.0.5",
+    "pretty-quick": "^2.0.1",
+    "react": "^16.13.1",
+    "react-dom": "^16.13.1",
+    "react-test-renderer": "^16.13.1",
+    "rollup": "^2.12.0",
+    "ts-jest": "^26.1.0",
+    "ts-loader": "^7.0.5",
+    "ts-node": "^8.10.2",
+    "typescript": "^3.9.3"
+  },
+  "husky": {
+    "hooks": {
+      "pre-commit": "yarn format"
     }
   },
+  "publishConfig": {
+    "access": "public"
+  },
   "dependencies": {
-    "date-fns": "^2.0.0-alpha.18",
-    "hoist-non-react-statics": "^3.0.1"
+    "date-fns": "^2.14.0",
+    "tslib": "^2.0.0"
   }
 }

@@ -1,30 +1,32 @@
-import React from 'react';
+import React, { createContext, Component, useContext, forwardRef } from 'react';
 import PropTypes from 'prop-types';
-import hoistNonReactStatics from 'hoist-non-react-statics';
 import { days, months } from './utils';
+import { Props, State, Week, Event, Days, MonthFnProps } from './types';
+import { uk } from 'date-fns/locale';
 import {
-  format,
   getYear,
   getMonth,
   addMonths,
   subMonths,
   isSameMonth,
   isSameDay,
-  eachDayOfInterval,
   addYears,
   subYears,
   isWeekend,
   setMonth,
   setYear,
   isBefore,
-  getDate,
+  isAfter,
+  toDate,
+  format,
 } from 'date-fns';
 
-const OrganizerContext = React.createContext({
+export const OrganizerContext = createContext<State>({
   days: [],
   months: [],
-  date: new Date(),
+  now: toDate(new Date()),
   selected: null,
+  gridOf: 0,
   // functions
   getPrevMonthOffset: () => {},
   getNextMonthOffset: () => {},
@@ -43,18 +45,23 @@ const OrganizerContext = React.createContext({
   changeLanguage: () => {},
 });
 
-export class Organizer extends React.Component {
+export default class Organizer extends Component<Props, State> {
+  static Consumer = OrganizerContext.Consumer;
   static propTypes = {
     children: PropTypes.func,
-    initialDays: PropTypes.array,
-    initialMonths: PropTypes.array,
+    locale: PropTypes.object,
+    format: PropTypes.string,
+    daysNames: PropTypes.array,
+    monthsNames: PropTypes.array,
     events: PropTypes.arrayOf(
       PropTypes.shape({
         starts: PropTypes.instanceOf(Date).isRequired,
       }),
     ),
-    initialGridBlocks: PropTypes.number,
+    initialGridOf: PropTypes.number,
     initialDate: PropTypes.instanceOf(Date),
+    selected: PropTypes.any,
+    now: PropTypes.instanceOf(Date),
     initialSelected: PropTypes.oneOfType([
       PropTypes.instanceOf(Date),
       PropTypes.arrayOf(PropTypes.instanceOf(Date)),
@@ -73,11 +80,13 @@ export class Organizer extends React.Component {
     onSelectMonth: () => {},
     onSelectYear: () => {},
     onChangeLanguage: () => {},
-    initialDays: days,
-    initialMonths: months,
+    locale: uk,
+    format: 'dd/MM/yyyy',
+    daysNames: days,
+    monthsNames: months,
     events: [],
-    initialGridBlocks: 42,
-    initialDate: new Date(),
+    initialGridOf: 42,
+    initialDate: toDate(new Date()),
     initialSelected: null,
   };
   static stateChangeTypes = {
@@ -92,20 +101,19 @@ export class Organizer extends React.Component {
     selectYear: '__select_year__',
     changeLanguage: '__change_language__',
   };
-  static Consumer = OrganizerContext.Consumer;
   //
-  _eventsForMonth = month => {
-    return this.props.events.filter(
-      ({ starts }) => getMonth(starts) + 1 === month,
-    );
-  };
-  _initializeEvents = (events, date) => {
+  private _initEventsForDate = (events: Event[], date: Date) => {
     return events.filter(({ starts }) => {
       return isSameDay(starts, date);
     });
   };
-  _getWeeksInAMonth = (month, year) => {
-    const weeks = [];
+  private _getEventsForMonth = (month: number) => {
+    return this.props.events.filter(
+      ({ starts }) => getMonth(starts) + 1 === month,
+    );
+  };
+  private _getNumberOfWeeksInAMonth = (month: number, year: number): Week[] => {
+    const weeks: Week[] = [];
     const firstDate = new Date(year, month, 1);
     const lastDate = new Date(year, month + 1, 0);
     const numDays = lastDate.getDate();
@@ -119,10 +127,10 @@ export class Organizer extends React.Component {
     }
     return weeks;
   };
-  _getNumberOfDaysInAMonth(month, year) {
+  private _getNumberOfDaysInAMonth(month: number, year: number) {
     return new Date(year, month + 1, 0).getDate();
   }
-  _isDaySelected = calendarDay => {
+  private _isDaySelected = (calendarDay: Date) => {
     const selected = this.getState().selected;
     if (selected && selected instanceof Date) {
       return isSameDay(this.getState().selected, calendarDay);
@@ -136,24 +144,28 @@ export class Organizer extends React.Component {
     type = Organizer.stateChangeTypes.changeLanguage,
     days,
     months,
+  }: {
+    type: string;
+    days: string[];
+    months: string[];
   }) => {
     if (days.length === 7 && months.length === 12) {
-      this.internalSetState({ type, days, months }, () =>
-        this.props.onChangeLanguage({
-          days: this.getState().days,
-          months: this.getState().months,
-        }),
+      this.internalSetState(
+        () => ({ type, days, months }),
+        () =>
+          this.props.onChangeLanguage({
+            days: this.getState().days,
+            months: this.getState().months,
+          }),
       );
     } else {
       throw new Error(
-        `changeLanguage: Not enough days ${days.length} or months ${
-          months.length
-        }`,
+        `changeLanguage: Not enough days ${days.length} or months ${months.length}`,
       );
     }
   };
-  getPrevMonthOffset = ({ month, year }) => {
-    const assignDays = [];
+  getPrevMonthOffset = ({ month, year, events }: MonthFnProps) => {
+    const assignDays: Days = [];
     let prevMonthNumber = month - 2;
     let currentYear = year;
     if (prevMonthNumber < 0) {
@@ -161,7 +173,7 @@ export class Organizer extends React.Component {
       prevMonthNumber = 11;
       currentYear = currentYear - 1;
     }
-    const { end, start } = this._getWeeksInAMonth(
+    const { end, start } = this._getNumberOfWeeksInAMonth(
       prevMonthNumber,
       currentYear,
     ).pop();
@@ -171,14 +183,21 @@ export class Organizer extends React.Component {
     for (let i = 0; i < end - start; i += 1) {
       const currentDay = (totalDays -= 1);
       const date = new Date(currentYear, prevMonthNumber, currentDay);
+      const todaysDate = new Date();
       assignDays.push({
+        date: toDate(date),
+        formatted: format(date, this.props.format, {
+          locale: this.props.locale,
+        }),
         name: this.getState().days[date.getDay()],
         day: currentDay,
-        date: date,
-        offset: true,
-        past: isBefore(date, new Date()),
         events: [],
-        weekend: isWeekend(date),
+        status: {
+          past: isBefore(date, todaysDate),
+          future: isAfter(date, todaysDate),
+          offset: true,
+          weekend: isWeekend(date),
+        },
       });
     }
 
@@ -190,27 +209,39 @@ export class Organizer extends React.Component {
       days: assignDays.reverse(),
     };
   };
-  getCurrentMonth = ({ month, year }) => {
-    const generatedDays = [];
-    const currentMonth = month - 1;
+  getCurrentMonth = ({ month, year, events }: MonthFnProps) => {
+    const generatedDays: Days = [];
+    const currentMonth = month - 1; // back to 0 index
     const totalDays = this._getNumberOfDaysInAMonth(currentMonth, year);
     const today = new Date().getDate() - 1;
-    const isToday =
-      isSameMonth(new Date(year, currentMonth, today), new Date()) && today;
+    // ERROR: the problem happens when it's the 1st day of the month, then
+    // it thinks that it's one month forward from current month.
+    const now =
+      isSameMonth(
+        new Date(year, today === 0 ? month : currentMonth, today),
+        new Date(),
+      ) && today;
 
     for (let i = 0; i < totalDays; i += 1) {
       const currentDay = i + 1;
       const date = new Date(year, currentMonth, currentDay);
-      const today = isToday === i;
+      const thisIsToday = now === i;
+      const todaysDate = new Date();
       generatedDays.push({
+        date: toDate(date),
+        formatted: format(date, this.props.format, {
+          locale: this.props.locale,
+        }),
         name: this.getState().days[date.getDay()],
         day: currentDay,
-        date: date,
-        today,
-        past: today ? false : isBefore(date, new Date()),
         events: [],
-        weekend: isWeekend(date),
-        selected: this._isDaySelected(date),
+        status: {
+          past: thisIsToday ? false : isBefore(date, todaysDate),
+          future: thisIsToday ? false : isAfter(date, todaysDate),
+          weekend: isWeekend(date),
+          selected: this._isDaySelected(date),
+          today: thisIsToday,
+        },
       });
     }
 
@@ -219,12 +250,24 @@ export class Organizer extends React.Component {
       month,
       year,
       totalDays,
-      totalWeeks: this._getWeeksInAMonth(currentMonth, year).length,
+      totalWeeks: this._getNumberOfWeeksInAMonth(currentMonth, year).length,
       days: generatedDays,
     };
   };
-  getNextMonthOffset = ({ month, year, totalOffsetDays, totalDays }) => {
-    const assignDays = [];
+  getNextMonthOffset = ({
+    month,
+    year,
+    totalOffsetDays,
+    totalDays,
+    events,
+  }: {
+    month: number;
+    year: number;
+    totalOffsetDays: number;
+    totalDays: number;
+    events: Event[];
+  }) => {
+    const assignDays: Days = [];
     let currentMonth = month;
     let currentYear = year;
     if (currentMonth > 11) {
@@ -233,19 +276,26 @@ export class Organizer extends React.Component {
       currentYear = currentYear + 1;
     }
     const nextMonthOffset =
-      this.getState().gridBlocks - totalOffsetDays - totalDays;
+      this.getState().gridOf - totalOffsetDays - totalDays;
 
     for (let i = 0; i < nextMonthOffset; i += 1) {
       const currentDay = i + 1;
       const date = new Date(currentYear, currentMonth, currentDay);
+      const todaysDate = new Date();
       assignDays.push({
+        date: toDate(date),
+        formatted: format(date, this.props.format, {
+          locale: this.props.locale,
+        }),
         name: this.getState().days[date.getDay()],
         day: currentDay,
-        date: date,
-        offset: true,
-        past: isBefore(date, new Date()),
         events: [],
-        weekend: isWeekend(date),
+        status: {
+          past: isBefore(date, todaysDate),
+          future: isAfter(date, todaysDate),
+          weekend: isWeekend(date),
+          offset: true,
+        },
       });
     }
 
@@ -257,12 +307,14 @@ export class Organizer extends React.Component {
       days: assignDays,
     };
   };
-  getFullMonth = (initMonth, events) => {
-    const month = initMonth ? initMonth : getMonth(this.getState().date) + 1;
-    const year = getYear(this.getState().date);
+  getFullMonth = (m?: number, events?: Event[]) => {
+    // month index starts from 1
+    const month = m ? m : getMonth(this.getState().now) + 1;
+    const year = getYear(this.getState().now);
+    // TODO START: move off to the SW
     const firstOffset = this.getPrevMonthOffset({ month, year, events });
     const current = this.getCurrentMonth({ month, year, events });
-    const eventsForMonth = this._eventsForMonth(month);
+    const eventsForMonth = this._getEventsForMonth(month);
     const nextOffset = this.getNextMonthOffset({
       month,
       year,
@@ -273,21 +325,23 @@ export class Organizer extends React.Component {
 
     let result = [...firstOffset.days, ...current.days, ...nextOffset.days];
     if (eventsForMonth.length && events) {
+      // NOTE: cannot load async because it is used for render... bad architecture...
       // convert into for of
       result = result.map(day => {
         return Object.assign(day, {
-          events: this._initializeEvents(eventsForMonth, day.date),
+          events: this._initEventsForDate(eventsForMonth, day.date),
         });
       });
     }
+    // TODO END: move off to the SW
 
     return {
       ...current,
       days: result,
     };
   };
-  getFullYear = events => {
-    const months = [];
+  getFullYear = (events: Event[]) => {
+    const months: any = [];
     for (let i = 0; i < 13; i += 1) {
       months.push(this.getFullMonth(i, events));
     }
@@ -300,18 +354,18 @@ export class Organizer extends React.Component {
     this.internalSetState(
       state => ({
         type,
-        date: addMonths(state.date, 1),
+        now: addMonths(state.now, 1),
       }),
-      () => this.props.onAddCalendarMonth(this.getState().date),
+      () => this.props.onAddCalendarMonth(this.getState().now),
     );
   };
   selectMonth = ({ type = Organizer.stateChangeTypes.selectMonth, month }) => {
     this.internalSetState(
       state => ({
         type,
-        date: setMonth(state.date, month),
+        now: setMonth(state.now, month),
       }),
-      () => this.props.onSelectMonth(this.getState().date),
+      () => this.props.onSelectMonth(this.getState().now),
     );
   };
   subCalendarMonth = ({
@@ -320,9 +374,9 @@ export class Organizer extends React.Component {
     this.internalSetState(
       state => ({
         type,
-        date: subMonths(state.date, 1),
+        now: subMonths(state.now, 1),
       }),
-      () => this.props.onSubCalendarMonth(this.getState().date),
+      () => this.props.onSubCalendarMonth(this.getState().now),
     );
   };
   addCalendarYear = ({
@@ -331,18 +385,18 @@ export class Organizer extends React.Component {
     this.internalSetState(
       state => ({
         type,
-        date: addYears(state.date, 1),
+        now: addYears(state.now, 1),
       }),
-      () => this.props.onAddCalendarYear(this.getState().date),
+      () => this.props.onAddCalendarYear(this.getState().now),
     );
   };
   selectYear = ({ type = Organizer.stateChangeTypes.selectYear, year }) => {
     this.internalSetState(
       state => ({
         type,
-        date: setYear(state.date, year),
+        now: setYear(state.now, year),
       }),
-      () => this.props.onSelectYear(this.getState().date),
+      () => this.props.onSelectYear(this.getState().now),
     );
   };
   subCalendarYear = ({
@@ -351,22 +405,35 @@ export class Organizer extends React.Component {
     this.internalSetState(
       state => ({
         type,
-        date: subYears(state.date, 1),
+        now: subYears(state.now, 1),
       }),
-      () => this.props.onSubCalendarYear(this.getState().date),
+      () => this.props.onSubCalendarYear(this.getState().now),
     );
   };
   selectDate = ({ type = Organizer.stateChangeTypes.selectDate, date }) => {
-    this.internalSetState({ type, date, selected: date }, () => {
-      return this.props.onSelectDate(this.getState().selected);
-    });
+    this.internalSetState(
+      () => ({ type, now: date, selected: date }),
+      () => {
+        return this.props.onSelectDate(this.getState().selected);
+      },
+    );
   };
-  selectRange = ({ type = Organizer.stateChangeTypes.selectRange, date }) => {
+  selectRange = ({
+    type = Organizer.stateChangeTypes.selectRange,
+    date,
+    range,
+  }) => {
     this.internalSetState(
       state => {
         let selectionState = {};
         const selected = state.selected;
-
+        // ability to initially select dates
+        if (range && Array.isArray(range) && range.length === 2) {
+          return {
+            selected: range,
+          };
+        }
+        // ability to select dates one by one
         if (Array.isArray(selected) && selected.length < 2) {
           // if second date selected is before the first it will become first.
           if (isBefore(date, selected[0])) {
@@ -393,16 +460,16 @@ export class Organizer extends React.Component {
   };
   reset = () => {
     this.internalSetState(
-      { ...this.initialState, type: Organizer.stateChangeTypes.reset },
-      () => this.props.onReset(this.getState().date),
+      () => ({ ...this.initialState, type: Organizer.stateChangeTypes.reset }),
+      () => this.props.onReset(this.getState().now),
     );
   };
   //
   initialState = {
-    days: this.props.initialDays,
-    months: this.props.initialMonths,
-    gridBlocks: this.props.initialGridBlocks,
-    date: this.props.initialDate,
+    days: this.props.daysNames,
+    months: this.props.monthsNames,
+    gridOf: this.props.initialGridOf,
+    now: this.props.initialDate,
     selected: this.props.initialSelected,
     // fns
     getPrevMonthOffset: this.getPrevMonthOffset,
@@ -422,10 +489,10 @@ export class Organizer extends React.Component {
     changeLanguage: this.changeLanguage,
   };
   state = this.initialState;
-  isControlledProp(key) {
+  isControlledProp(key: string) {
     return this.props[key] !== undefined;
   }
-  getState(stateToMerge = this.state) {
+  getState(stateToMerge: State = this.state): any {
     return Object.keys(stateToMerge).reduce((state, key) => {
       state[key] = this.isControlledProp(key)
         ? this.props[key]
@@ -433,11 +500,14 @@ export class Organizer extends React.Component {
       return state;
     }, {});
   }
-  internalSetState = (changes, callback = () => {}) => {
-    let allChanges;
+  internalSetState = (
+    changes: (state: State) => void | object, // return of an object doesn't work 🤔
+    callback = () => {},
+  ): void => {
+    let allChanges: unknown;
     this.setState(
       currentState => {
-        const combinedState = this.getState(currentState);
+        const combinedState: Readonly<State> = this.getState(currentState);
         return [changes]
           .map(c => (typeof c === 'function' ? c(currentState) : c))
           .map(c => {
@@ -475,17 +545,21 @@ export class Organizer extends React.Component {
 }
 
 export function withOrganizer(Component) {
-  const Wrapper = React.forwardRef((props, ref) => {
+  const Wrapper = forwardRef((props, ref) => {
     return (
       <Organizer.Consumer>
-        {browserUtils => (
-          <Component {...props} organizer={browserUtils} ref={ref} />
+        {organizerUtils => (
+          <Component {...props} organizer={organizerUtils} ref={ref} />
         )}
       </Organizer.Consumer>
     );
   });
   Wrapper.displayName = `withOrganizer(${Component.displayName ||
     Component.name})`;
-  hoistNonReactStatics(Wrapper, Component);
   return Wrapper;
+}
+
+export function useOrganizer() {
+  const organizerUtils = useContext(OrganizerContext);
+  return organizerUtils;
 }

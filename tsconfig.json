@@ -1,0 +1,32 @@
+{
+  "version": "3.2.4",
+  "compilerOptions": {
+    "rootDir": "src",
+    "baseUrl": "src",
+    "outDir": "lib",
+    "noImplicitAny": true,
+    "strictNullChecks": false,
+    "experimentalDecorators": true,
+    "noUnusedParameters": true,
+    "noUnusedLocals": true,
+    "skipLibCheck": true,
+    "moduleResolution": "node",
+    "removeComments": true,
+    "sourceMap": true,
+    "declaration": true,
+    "declarationMap": true,
+    "target": "es5",
+    "module": "es2015",
+    "esModuleInterop": true,
+    "lib": ["esnext", "dom"],
+    "jsx": "react"
+  },
+  "include": ["src/**/*"],
+  "exclude": [
+    "node_modules",
+    "lib",
+    "**/__mocks__/**/*",
+    "**/__tests__/**/*",
+    "**/*.mdx"
+  ]
+}
