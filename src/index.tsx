@@ -136,7 +136,7 @@ export default class Organizer extends Component<Props, State> {
       return isSameDay(this.getState().selected, calendarDay);
     }
     if (Array.isArray(selected)) {
-      return selected.map(s => isSameDay(s, calendarDay)).includes(true);
+      return selected.map((s) => isSameDay(s, calendarDay)).includes(true);
     }
     return false;
   };
@@ -327,7 +327,7 @@ export default class Organizer extends Component<Props, State> {
     if (eventsForMonth.length && events) {
       // NOTE: cannot load async because it is used for render... bad architecture...
       // convert into for of
-      result = result.map(day => {
+      result = result.map((day) => {
         return Object.assign(day, {
           events: this._initEventsForDate(eventsForMonth, day.date),
         });
@@ -352,7 +352,7 @@ export default class Organizer extends Component<Props, State> {
     type = Organizer.stateChangeTypes.addCalendarMonth,
   } = {}) => {
     this.internalSetState(
-      state => ({
+      (state) => ({
         type,
         now: addMonths(state.now, 1),
       }),
@@ -361,7 +361,7 @@ export default class Organizer extends Component<Props, State> {
   };
   selectMonth = ({ type = Organizer.stateChangeTypes.selectMonth, month }) => {
     this.internalSetState(
-      state => ({
+      (state) => ({
         type,
         now: setMonth(state.now, month),
       }),
@@ -372,7 +372,7 @@ export default class Organizer extends Component<Props, State> {
     type = Organizer.stateChangeTypes.subCalendarMonth,
   } = {}) => {
     this.internalSetState(
-      state => ({
+      (state) => ({
         type,
         now: subMonths(state.now, 1),
       }),
@@ -383,7 +383,7 @@ export default class Organizer extends Component<Props, State> {
     type = Organizer.stateChangeTypes.addCalendarYear,
   } = {}) => {
     this.internalSetState(
-      state => ({
+      (state) => ({
         type,
         now: addYears(state.now, 1),
       }),
@@ -392,7 +392,7 @@ export default class Organizer extends Component<Props, State> {
   };
   selectYear = ({ type = Organizer.stateChangeTypes.selectYear, year }) => {
     this.internalSetState(
-      state => ({
+      (state) => ({
         type,
         now: setYear(state.now, year),
       }),
@@ -403,7 +403,7 @@ export default class Organizer extends Component<Props, State> {
     type = Organizer.stateChangeTypes.subCalendarYear,
   } = {}) => {
     this.internalSetState(
-      state => ({
+      (state) => ({
         type,
         now: subYears(state.now, 1),
       }),
@@ -424,7 +424,7 @@ export default class Organizer extends Component<Props, State> {
     range,
   }) => {
     this.internalSetState(
-      state => {
+      (state) => {
         let selectionState = {};
         const selected = state.selected;
         // ability to initially select dates
@@ -472,6 +472,7 @@ export default class Organizer extends Component<Props, State> {
     now: this.props.initialDate,
     selected: this.props.initialSelected,
     // fns
+    changeLanguage: this.changeLanguage,
     getPrevMonthOffset: this.getPrevMonthOffset,
     getNextMonthOffset: this.getNextMonthOffset,
     getCurrentMonth: this.getCurrentMonth,
@@ -486,7 +487,6 @@ export default class Organizer extends Component<Props, State> {
     reset: this.reset,
     selectMonth: this.selectMonth,
     selectYear: this.selectYear,
-    changeLanguage: this.changeLanguage,
   };
   state = this.initialState;
   isControlledProp(key: string) {
@@ -506,16 +506,16 @@ export default class Organizer extends Component<Props, State> {
   ): void => {
     let allChanges: unknown;
     this.setState(
-      currentState => {
+      (currentState) => {
         const combinedState: Readonly<State> = this.getState(currentState);
         return [changes]
-          .map(c => (typeof c === 'function' ? c(currentState) : c))
-          .map(c => {
+          .map((c) => (typeof c === 'function' ? c(currentState) : c))
+          .map((c) => {
             allChanges = this.props.stateReducer(combinedState, c) || {};
             return allChanges;
           })
           .map(({ type: ignoredType, ...onlyChanges }) => onlyChanges)
-          .map(c => {
+          .map((c) => {
             return Object.keys(combinedState).reduce((newChanges, stateKey) => {
               if (!this.isControlledProp(stateKey)) {
                 newChanges[stateKey] = c.hasOwnProperty(stateKey)
@@ -525,7 +525,7 @@ export default class Organizer extends Component<Props, State> {
               return newChanges;
             }, {});
           })
-          .map(c => (Object.keys(c || {}).length ? c : null))[0];
+          .map((c) => (Object.keys(c || {}).length ? c : null))[0];
       },
       () => {
         this.props.onStateChange(allChanges, this.state);
@@ -548,14 +548,15 @@ export function withOrganizer(Component) {
   const Wrapper = forwardRef((props, ref) => {
     return (
       <Organizer.Consumer>
-        {organizerUtils => (
+        {(organizerUtils) => (
           <Component {...props} organizer={organizerUtils} ref={ref} />
         )}
       </Organizer.Consumer>
     );
   });
-  Wrapper.displayName = `withOrganizer(${Component.displayName ||
-    Component.name})`;
+  Wrapper.displayName = `withOrganizer(${
+    Component.displayName || Component.name
+  })`;
   return Wrapper;
 }
 
