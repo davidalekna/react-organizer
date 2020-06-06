@@ -1,0 +1,27 @@
+version: 2.1
+orbs:
+  node: circleci/node@2.1.1
+jobs:
+  build-and-test:
+    working_directory: ~/calendar-tools
+    docker:
+      - image: 'cimg/base:stable'
+    steps:
+      - checkout
+      - restore_cache:
+          key: dependency-cache-{{ checksum "package.json" }}
+      - node/install:
+          install-yarn: true
+          node-version: latest
+      - run: node --version
+      - run: yarn install
+      - run: yarn build
+      - run: yarn test
+      - save_cache:
+          key: dependency-cache-{{ checksum "package.json" }}
+          paths:
+            - node_modules
+workflows:
+  build-test-deploy:
+    jobs:
+      - build-and-test
