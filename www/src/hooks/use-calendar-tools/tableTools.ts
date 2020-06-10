@@ -1,31 +1,17 @@
-import { useReducer } from 'react';
+import { useReducer, useEffect } from 'react';
 import { uk } from 'date-fns/locale';
-import {
-  days,
-  months,
-  getNumberOfWeeksInAMonth,
-  getNumberOfDaysInAMonth,
-  isDaySelected,
-  initEventsForDate,
-  getEventsForMonth,
-  EventProps,
-} from './utils';
+import { days, months, getEventsForMonth, EventProps } from './utils';
+import { monthHelpers, Days } from './monthHelpers';
 import {
   getYear,
   getMonth,
   addMonths,
-  subMonths,
-  isSameMonth,
-  isSameDay,
   addYears,
   subYears,
-  isWeekend,
   setMonth,
   setYear,
   isBefore,
-  isAfter,
   toDate,
-  format,
 } from 'date-fns';
 
 // NOTE: convert days of the months to be stored in an object instead of arrays. That should
@@ -33,24 +19,23 @@ import {
 
 export type Day = {
   date: Date;
-  formatted: string;
+  formatted?: string;
   name: string;
   day: number;
   events: Event[];
-  status: {
-    past: boolean;
-    future: boolean;
-    weekend: boolean;
-    selected?: boolean;
-    offset?: boolean;
-    today?: boolean;
-  };
+  // STATUS
+  past: boolean;
+  future: boolean;
+  weekend: boolean;
+  selected?: boolean;
+  offset?: boolean;
+  today?: boolean;
 };
 
 export type CalendarToolsState = {
   daysNames: string[];
   monthsNames: string[];
-  days: Day[];
+  days: Days;
   now: Date;
   selected: Date | null | any; // TODO: remove type `any`
   gridOf: number;
@@ -62,6 +47,11 @@ export const calendarToolsReducer: ReducerProps<CalendarToolsState, Action> = (
   state,
   action,
 ) => {
+  const helpers = monthHelpers({
+    daysNames: state.daysNames,
+    monthsNames: state.monthsNames,
+  });
+
   switch (action.type) {
     case actionTypes.changeLanguage: {
       const { days, months } = action.payload;
@@ -73,102 +63,34 @@ export const calendarToolsReducer: ReducerProps<CalendarToolsState, Action> = (
       };
     }
     case actionTypes.getPrevMonthOffset: {
-      const { daysNames, monthsNames } = state;
       const { month, year, format, locale } = action.payload;
-
-      const assignDays: Day[] = [];
-      let prevMonthNumber = month - 2;
-      let currentYear = year;
-      if (prevMonthNumber < 0) {
-        // check if previews year
-        prevMonthNumber = 11;
-        currentYear = currentYear - 1;
-      }
-      const { end, start } = getNumberOfWeeksInAMonth(
-        prevMonthNumber,
-        currentYear,
-      ).pop();
-      let totalDays = getNumberOfDaysInAMonth(prevMonthNumber, currentYear) + 1;
-
-      for (let i = 0; i < end - start; i += 1) {
-        const currentDay = (totalDays -= 1);
-        const date = new Date(currentYear, prevMonthNumber, currentDay);
-        const todaysDate = new Date();
-        assignDays.push({
-          date: toDate(date),
-          formatted: format(date, format, { locale }),
-          name: daysNames[date.getDay()],
-          day: currentDay,
-          events: [],
-          status: {
-            past: isBefore(date, todaysDate),
-            future: isAfter(date, todaysDate),
-            offset: true,
-            weekend: isWeekend(date),
-          },
-        });
-      }
-
+      const nextState = helpers.getPrevMonthOffset({
+        month,
+        year,
+        format,
+        locale,
+      });
       return {
         ...state,
-        name: monthsNames[prevMonthNumber],
-        month: prevMonthNumber + 1,
-        year: currentYear,
-        totalOffsetDays: assignDays.length,
-        days: assignDays.reverse(),
+        ...nextState,
       };
     }
     case actionTypes.getCurrentMonth: {
-      const { daysNames, monthsNames } = state;
       const { selected, month, year, format, locale } = action.payload;
-
-      const generatedDays: Day[] = [];
-      const currentMonth = month - 1; // back to 0 index
-      const totalDays = getNumberOfDaysInAMonth(currentMonth, year);
-      const today = new Date().getDate() - 1;
-      // ERROR: the problem happens when it's the 1st day of the month, then
-      // it thinks that it's one month forward from current month.
-      const now =
-        isSameMonth(
-          new Date(year, today === 0 ? month : currentMonth, today),
-          new Date(),
-        ) && today;
-
-      for (let i = 0; i < totalDays; i += 1) {
-        const currentDay = i + 1;
-        const date = new Date(year, currentMonth, currentDay);
-        const thisIsToday = now === i;
-        const todaysDate = new Date();
-        generatedDays.push({
-          date: toDate(date),
-          formatted: format(date, format, {
-            locale: locale,
-          }),
-          name: daysNames[date.getDay()],
-          day: currentDay,
-          events: [],
-          status: {
-            past: thisIsToday ? false : isBefore(date, todaysDate),
-            future: thisIsToday ? false : isAfter(date, todaysDate),
-            weekend: isWeekend(date),
-            selected: isDaySelected(selected, date),
-            today: thisIsToday,
-          },
-        });
-      }
+      const nextState = helpers.getCurrentMonth({
+        selected,
+        month,
+        year,
+        format,
+        locale,
+      });
 
       return {
         ...state,
-        name: monthsNames[currentMonth],
-        month,
-        year,
-        totalDays,
-        totalWeeks: getNumberOfWeeksInAMonth(currentMonth, year).length,
-        days: generatedDays,
+        ...nextState,
       };
     }
     case actionTypes.getNextMonthOffset: {
-      const { daysNames, monthsNames } = state;
       const {
         gridOf,
         totalOffsetDays,
@@ -178,71 +100,57 @@ export const calendarToolsReducer: ReducerProps<CalendarToolsState, Action> = (
         format,
         locale,
       } = action.payload;
-
-      const assignDays: Day[] = [];
-      let currentMonth = month;
-      let currentYear = year;
-      if (currentMonth > 11) {
-        // check if next year
-        currentMonth = 0;
-        currentYear = currentYear + 1;
-      }
-      const nextMonthOffset = gridOf - totalOffsetDays - totalDays;
-
-      for (let i = 0; i < nextMonthOffset; i += 1) {
-        const currentDay = i + 1;
-        const date = new Date(currentYear, currentMonth, currentDay);
-        const todaysDate = new Date();
-        assignDays.push({
-          date: toDate(date),
-          formatted: format(date, format, {
-            locale: locale,
-          }),
-          name: daysNames[date.getDay()],
-          day: currentDay,
-          events: [],
-          status: {
-            past: isBefore(date, todaysDate),
-            future: isAfter(date, todaysDate),
-            weekend: isWeekend(date),
-            offset: true,
-          },
-        });
-      }
-
+      const nextState = helpers.getNextMonthOffset({
+        gridOf,
+        totalOffsetDays,
+        totalDays,
+        month,
+        year,
+        format,
+        locale,
+      });
       return {
         ...state,
-        name: monthsNames[currentMonth],
-        month: currentMonth + 1,
-        year: currentYear,
-        totalOffsetDays: assignDays.length,
-        days: assignDays,
+        ...nextState,
       };
     }
     case actionTypes.getFullMonth: {
-      return state;
-      // const { now } = state;
-      // const { m, initialEvents, events } = action.payload;
-      // // month index starts from 1
-      // const month = m ? m : getMonth(now) + 1;
-      // const year = getYear(now);
+      const { now, selected, gridOf } = state;
+      const { m, initialEvents, events, format, locale } = action.payload;
 
-      // // TODO: figure out how to solve following 🙇🏼‍♂️🐑
-      // // I believe that getPrevMonthOffset, getCurrentMonth and getNextMonthOffset
-      // // should be outside functions because they should be re-usable
+      // month index starts from 1
+      const month = m ? m : getMonth(now) + 1;
+      const year = getYear(now);
 
-      // const firstOffset = this.getPrevMonthOffset({ month, year, events });
-      // const current = this.getCurrentMonth({ month, year, events });
+      // TODO: figure out how to solve following 🙇🏼‍♂️🐑
+      // I believe that getPrevMonthOffset, getCurrentMonth and getNextMonthOffset
+      // should be outside functions because they should be re-usable
+
+      const firstOffset = helpers.getPrevMonthOffset({
+        month,
+        year,
+        format,
+        locale,
+      }); // `events`
+      const current = helpers.getCurrentMonth({
+        month,
+        year,
+        selected,
+        format,
+        locale,
+      }); // `events` (-selected)
       // const eventsForMonth = getEventsForMonth(initialEvents, month);
-      // const nextOffset = this.getNextMonthOffset({
-      //   month,
-      //   year,
-      //   events,
-      //   totalOffsetDays: firstOffset.totalOffsetDays,
-      //   totalDays: current.totalDays,
-      // });
+      const nextOffset = helpers.getNextMonthOffset({
+        month,
+        year,
+        totalOffsetDays: firstOffset.totalOffsetDays,
+        totalDays: current.totalDays,
+        format,
+        locale,
+        gridOf,
+      }); // `events`
 
-      // let result = [...firstOffset.days, ...current.days, ...nextOffset.days];
+      let result = { ...firstOffset.days, ...current.days, ...nextOffset.days };
       // if (eventsForMonth.length && events) {
       //   // NOTE: cannot load async because it is used for render... bad architecture...
       //   // convert into for of
@@ -252,13 +160,13 @@ export const calendarToolsReducer: ReducerProps<CalendarToolsState, Action> = (
       //     });
       //   });
       // }
-      // // TODO END: move off to the SW
+      // TODO END: move off to the SW
 
-      // return {
-      //   ...state,
-      //   ...current,
-      //   days: result,
-      // };
+      return {
+        ...state,
+        ...current,
+        days: result,
+      };
     }
     case actionTypes.addCalendarMonth: {
       return {
@@ -392,11 +300,15 @@ export const useCalendarTools = (
   const [state, send] = useReducer(reducer, {
     daysNames,
     monthsNames,
-    days: [],
+    days: {},
     gridOf: initialGridOf,
     now: initialDate,
     selected: initialSelected,
   });
+
+  useEffect(() => {
+    getFullMonth(5);
+  }, []);
 
   const changeLanguage = ({ days, months }: any) => {
     send({ type: actionTypes.changeLanguage, payload: { days, months } });
