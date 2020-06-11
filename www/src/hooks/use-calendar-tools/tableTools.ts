@@ -1,4 +1,4 @@
-import { useReducer, useEffect, useCallback } from 'react';
+import { useReducer, useEffect, useCallback, useMemo } from 'react';
 import { uk } from 'date-fns/locale';
 import { days, months, EventProps } from './utils';
 import { monthHelpers } from './monthHelpers';
@@ -52,7 +52,6 @@ export const calendarToolsReducer: ReducerProps<CalendarToolsState, Action> = (
   const helpers = monthHelpers({
     daysNames: state.daysNames,
     monthsNames: state.monthsNames,
-    events: state.events,
   });
 
   switch (action.type) {
@@ -73,7 +72,7 @@ export const calendarToolsReducer: ReducerProps<CalendarToolsState, Action> = (
     }
     case actionTypes.getFullMonth: {
       const { now, selected, gridOf } = state;
-      const { month: m, format, locale } = action.payload;
+      const { month: m, format, locale, events } = action.payload;
 
       // month index starts from 1
       const month = m ? m : getMonth(now) + 1;
@@ -88,6 +87,7 @@ export const calendarToolsReducer: ReducerProps<CalendarToolsState, Action> = (
         year,
         format,
         locale,
+        events,
       });
       const current = helpers.getCurrentMonth({
         month,
@@ -95,7 +95,8 @@ export const calendarToolsReducer: ReducerProps<CalendarToolsState, Action> = (
         selected,
         format,
         locale,
-      }); // `events` (-selected)
+        events,
+      }); // (-selected)
       const nextOffset = helpers.getNextMonthOffset({
         month,
         year,
@@ -104,6 +105,7 @@ export const calendarToolsReducer: ReducerProps<CalendarToolsState, Action> = (
         format,
         locale,
         gridOf,
+        events,
       });
 
       const result = [
@@ -254,6 +256,8 @@ export const useCalendarTools = (
   }: Partial<CalendarToolsProps> = {},
   reducer = calendarToolsReducer,
 ) => {
+  const memoEvents = useMemo(() => events, [events]);
+
   const [state, send] = useReducer(reducer, {
     daysNames,
     monthsNames,
@@ -261,18 +265,18 @@ export const useCalendarTools = (
     gridOf: initialGridOf,
     now: initialDate,
     selected: initialSelected,
-    events,
+    events: memoEvents,
   });
 
   useEffect(() => {
-    getFullMonth({ month: state.now.getMonth() });
-  }, [state.now]);
+    getFullMonth({ month: state.now.getMonth(), events: memoEvents });
+  }, [state.now, memoEvents]);
 
   const changeLanguage = ({ days, months }: any) => {
     send({ type: actionTypes.changeLanguage, payload: { days, months } });
   };
 
-  const getFullMonth = ({ month }) => {
+  const getFullMonth = ({ month, events }) => {
     send({
       type: actionTypes.getFullMonth,
       payload: { month, events },
@@ -283,7 +287,7 @@ export const useCalendarTools = (
     // ERROR: this function wont work!! Look above...
     const months: any = [];
     for (let i = 0; i < 13; i += 1) {
-      months.push(getFullMonth({ month: i }));
+      months.push(getFullMonth({ month: i, events }));
     }
     months.shift();
     return months;

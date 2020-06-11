@@ -78,9 +78,9 @@ function generateDays({
   return days;
 }
 
-export const monthHelpers = ({ daysNames, monthsNames, events }) => {
+export const monthHelpers = ({ daysNames, monthsNames }) => {
   return {
-    getPrevMonthOffset({ month, year, format, locale }) {
+    getPrevMonthOffset({ month, year, format, locale, events }) {
       // DO THE PROCESSING
       let prevMonthNumber = month - 1;
       let currentYear = year;
@@ -119,7 +119,7 @@ export const monthHelpers = ({ daysNames, monthsNames, events }) => {
         days: generatedDays,
       };
     },
-    getCurrentMonth({ selected, month, year, format, locale }) {
+    getCurrentMonth({ selected, month, year, format, locale, events }) {
       const currentMonth = month; // back to 0 index
       const totalDays = getNumberOfDaysInAMonth(currentMonth, year);
 
@@ -153,6 +153,7 @@ export const monthHelpers = ({ daysNames, monthsNames, events }) => {
       year,
       format,
       locale,
+      events,
     }) {
       let followingMonth = month + 1;
       let currentYear = year;
