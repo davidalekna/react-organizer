@@ -1,6 +1,6 @@
-import { useReducer, useEffect } from 'react';
+import { useReducer, useEffect, useCallback } from 'react';
 import { uk } from 'date-fns/locale';
-import { days, months, getEventsForMonth, EventProps } from './utils';
+import { days, months, EventProps } from './utils';
 import { monthHelpers, Days } from './monthHelpers';
 import {
   getYear,
@@ -12,6 +12,7 @@ import {
   setYear,
   isBefore,
   toDate,
+  subMonths,
 } from 'date-fns';
 
 // NOTE: convert days of the months to be stored in an object instead of arrays. That should
@@ -22,7 +23,7 @@ export type Day = {
   formatted?: string;
   name: string;
   day: number;
-  events: Event[];
+  events: EventProps[];
   // STATUS
   past: boolean;
   future: boolean;
@@ -39,6 +40,7 @@ export type CalendarToolsState = {
   now: Date;
   selected: Date | null | any; // TODO: remove type `any`
   gridOf: number;
+  events: EventProps[];
 };
 
 export type Action = { type: string; payload?: any };
@@ -50,9 +52,16 @@ export const calendarToolsReducer: ReducerProps<CalendarToolsState, Action> = (
   const helpers = monthHelpers({
     daysNames: state.daysNames,
     monthsNames: state.monthsNames,
+    events: state.events,
   });
 
   switch (action.type) {
+    case actionTypes.reset: {
+      return {
+        ...state,
+        ...action.payload,
+      };
+    }
     case actionTypes.changeLanguage: {
       const { days, months } = action.payload;
       // NOTE: maybe days and months could be retrieved from date-fns locale?
@@ -116,7 +125,7 @@ export const calendarToolsReducer: ReducerProps<CalendarToolsState, Action> = (
     }
     case actionTypes.getFullMonth: {
       const { now, selected, gridOf } = state;
-      const { m, initialEvents, events, format, locale } = action.payload;
+      const { month: m, format, locale } = action.payload;
 
       // month index starts from 1
       const month = m ? m : getMonth(now) + 1;
@@ -150,7 +159,12 @@ export const calendarToolsReducer: ReducerProps<CalendarToolsState, Action> = (
         gridOf,
       }); // `events`
 
-      let result = { ...firstOffset.days, ...current.days, ...nextOffset.days };
+      const result = Object.assign(
+        firstOffset.days,
+        current.days,
+        nextOffset.days,
+      );
+
       // if (eventsForMonth.length && events) {
       //   // NOTE: cannot load async because it is used for render... bad architecture...
       //   // convert into for of
@@ -175,10 +189,9 @@ export const calendarToolsReducer: ReducerProps<CalendarToolsState, Action> = (
       };
     }
     case actionTypes.subCalendarMonth: {
-      const { month } = action.payload;
       return {
         ...state,
-        now: setMonth(state.now, month),
+        now: subMonths(state.now, 1),
       };
     }
     case actionTypes.addCalendarYear: {
@@ -304,11 +317,12 @@ export const useCalendarTools = (
     gridOf: initialGridOf,
     now: initialDate,
     selected: initialSelected,
+    events,
   });
 
   useEffect(() => {
-    getFullMonth(5);
-  }, []);
+    getFullMonth({ month: state.now.getMonth() });
+  }, [state.now]);
 
   const changeLanguage = ({ days, months }: any) => {
     send({ type: actionTypes.changeLanguage, payload: { days, months } });
@@ -349,18 +363,18 @@ export const useCalendarTools = (
     });
   };
 
-  const getFullMonth = (m?: number, monthEvents?: Event[]) => {
+  const getFullMonth = ({ month }) => {
     send({
       type: actionTypes.getFullMonth,
-      payload: { m, initialEvents: events, events: monthEvents },
+      payload: { month, events },
     });
   };
 
-  const getFullYear = (events: Event[]) => {
+  const getFullYear = () => {
     // ERROR: this function wont work!! Look above...
     const months: any = [];
     for (let i = 0; i < 13; i += 1) {
-      months.push(getFullMonth(i, events));
+      months.push(getFullMonth({ month: i }));
     }
     months.shift();
     return months;
@@ -370,8 +384,8 @@ export const useCalendarTools = (
     send({ type: actionTypes.addCalendarMonth });
   };
 
-  const subCalendarMonth = ({ month }: any) => {
-    send({ type: actionTypes.subCalendarMonth, payload: { month } });
+  const subCalendarMonth = () => {
+    send({ type: actionTypes.subCalendarMonth });
   };
 
   const addCalendarYear = () => {
@@ -391,7 +405,7 @@ export const useCalendarTools = (
   };
 
   const reset = () => {
-    // TODO
+    send({ type: actionTypes.reset, payload: { now: initialDate } });
   };
 
   const selectMonth = ({ month }: any) => {
@@ -401,6 +415,14 @@ export const useCalendarTools = (
   const selectYear = ({ year }: any) => {
     send({ type: actionTypes.selectYear, payload: { year } });
   };
+
+  const getCurrentMonthName = useCallback(() => {
+    return monthsNames[state.now.getMonth()];
+  }, [state.now]);
+
+  const getCurrentYearName = useCallback(() => state.now.getFullYear(), [
+    state.now,
+  ]);
 
   return Object.assign(state, {
     changeLanguage,
@@ -418,5 +440,7 @@ export const useCalendarTools = (
     reset,
     selectMonth,
     selectYear,
+    getCurrentMonthName,
+    getCurrentYearName,
   });
 };

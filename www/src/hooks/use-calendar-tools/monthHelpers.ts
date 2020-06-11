@@ -29,7 +29,7 @@ function generateDays({
   currendDayCb = (index) => index + 1,
   offset = false,
 }: any = {}) {
-  let days: Days = [];
+  let days: Days = {};
 
   const today = new Date().getDate() - 1;
   const now =
@@ -39,16 +39,16 @@ function generateDays({
     ) && today;
 
   for (let i = 0; i < loopOnNumber; i += 1) {
-    const currentDay = currendDayCb(i);
-    const date = new Date(year, month, currentDay);
-    const thisIsToday = now === i;
+    const dayNumber: number = currendDayCb(i);
+    const date: Date = new Date(year, month, dayNumber);
+    const thisIsToday: boolean = now === i;
     const todaysDate = new Date();
 
-    days[i] = {
+    days[date.toDateString()] = {
       date: toDate(date),
       // formatted: format(date, dateFormat, { locale }),
       name: daysNames[date.getDay()],
-      day: currentDay,
+      day: dayNumber,
       events: [],
       // status
       past: thisIsToday ? false : isBefore(date, todaysDate),
@@ -63,11 +63,11 @@ function generateDays({
   return days;
 }
 
-export const monthHelpers = ({ daysNames, monthsNames }) => {
+export const monthHelpers = ({ daysNames, monthsNames, events }) => {
   return {
     getPrevMonthOffset({ month, year, format, locale }) {
       // DO THE PROCESSING
-      let prevMonthNumber = month - 2;
+      let prevMonthNumber = month - 1;
       let currentYear = year;
       if (prevMonthNumber < 0) {
         // check if previews year
@@ -92,6 +92,8 @@ export const monthHelpers = ({ daysNames, monthsNames }) => {
         offset: true,
       });
 
+      // TODO: reverse days
+
       return {
         name: monthsNames[prevMonthNumber],
         month: prevMonthNumber + 1,
@@ -102,7 +104,7 @@ export const monthHelpers = ({ daysNames, monthsNames }) => {
       };
     },
     getCurrentMonth({ selected, month, year, format, locale }) {
-      const currentMonth = month - 1; // back to 0 index
+      const currentMonth = month; // back to 0 index
       const totalDays = getNumberOfDaysInAMonth(currentMonth, year);
 
       const generatedDays = generateDays({
@@ -135,18 +137,18 @@ export const monthHelpers = ({ daysNames, monthsNames }) => {
       format,
       locale,
     }) {
-      let currentMonth = month;
+      let followingMonth = month + 1;
       let currentYear = year;
-      if (currentMonth > 11) {
+      if (followingMonth > 11) {
         // check if next year
-        currentMonth = 0;
+        followingMonth = 0;
         currentYear = currentYear + 1;
       }
       const nextMonthOffset = gridOf - totalOffsetDays - totalDays;
 
       const generatedDays = generateDays({
         year: currentYear,
-        month: currentMonth,
+        month: followingMonth,
         format,
         locale,
         daysNames,
@@ -156,8 +158,8 @@ export const monthHelpers = ({ daysNames, monthsNames }) => {
       });
 
       return {
-        name: monthsNames[currentMonth],
-        month: currentMonth + 1,
+        name: monthsNames[followingMonth],
+        month: followingMonth + 1,
         year: currentYear,
         totalOffsetDays: Object.keys(generatedDays).length,
         days: generatedDays,
