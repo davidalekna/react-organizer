@@ -68,17 +68,17 @@ export const isDaySelected = (isSelected: Date, calendarDay: Date) => {
 };
 
 export type EventProps = {
-  starts: Date;
-  ends?: Date;
+  start: Date;
+  end?: Date;
   [key: string]: any;
 };
 
 export const initEventsForDate = (events: EventProps[], date: Date) => {
-  return events.filter(({ starts }) => {
-    return isSameDay(starts, date);
+  return events.filter(({ start }) => {
+    return isSameDay(start, date);
   });
 };
 
 export const getEventsForMonth = (events: EventProps[], month: number) => {
-  return events.filter(({ starts }) => getMonth(starts) + 1 === month);
+  return events.filter(({ start }) => getMonth(start) + 1 === month);
 };

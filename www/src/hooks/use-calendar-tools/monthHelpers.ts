@@ -5,19 +5,16 @@ import {
   isBefore,
   isAfter,
   toDate,
+  isWithinInterval,
 } from 'date-fns';
-import { Day } from './tableTools';
 import {
   getNumberOfWeeksInAMonth,
   getNumberOfDaysInAMonth,
   isDaySelected,
 } from './utils';
 
-export type Days = {
-  [key: number]: Day;
-};
-
 function generateDays({
+  events,
   currentMonth = false,
   loopOnNumber,
   year,
@@ -29,7 +26,7 @@ function generateDays({
   currendDayCb = (index) => index + 1,
   offset = false,
 }: any = {}) {
-  let days: Days = {};
+  const days = new Map();
 
   const today = new Date().getDate() - 1;
   const now =
@@ -43,13 +40,31 @@ function generateDays({
     const date: Date = new Date(year, month, dayNumber);
     const thisIsToday: boolean = now === i;
     const todaysDate = new Date();
+    const currentDate = toDate(date);
 
-    days[date.toDateString()] = {
-      date: toDate(date),
+    const dayKey = format(date, 'dd-MM-yyyy');
+
+    // EVENTS FOR TODAY
+
+    const evts = events.filter((event) => {
+      if (event.end && event.start) {
+        return isWithinInterval(currentDate, {
+          start: event.start,
+          end: event.end,
+        });
+      }
+
+      return format(event.start, 'dd-MM-yyyy') === dayKey;
+    });
+
+    // EVENTS FOR TODAY
+
+    days.set(dayKey, {
+      date: currentDate,
       // formatted: format(date, dateFormat, { locale }),
       name: daysNames[date.getDay()],
       day: dayNumber,
-      events: [],
+      events: evts,
       // status
       past: thisIsToday ? false : isBefore(date, todaysDate),
       future: thisIsToday ? false : isAfter(date, todaysDate),
@@ -57,7 +72,7 @@ function generateDays({
       selected: isDaySelected(selected, date),
       today: thisIsToday,
       offset,
-    };
+    });
   }
 
   return days;
@@ -82,6 +97,7 @@ export const monthHelpers = ({ daysNames, monthsNames, events }) => {
       let totalDays = getNumberOfDaysInAMonth(prevMonthNumber, currentYear) + 1;
 
       const generatedDays = generateDays({
+        events,
         year: currentYear,
         month: prevMonthNumber,
         format,
@@ -98,7 +114,7 @@ export const monthHelpers = ({ daysNames, monthsNames, events }) => {
         name: monthsNames[prevMonthNumber],
         month: prevMonthNumber + 1,
         year: currentYear,
-        totalOffsetDays: Object.keys(generatedDays).length,
+        totalOffsetDays: generatedDays.size,
         // days: generatedDays.reverse(),
         days: generatedDays,
       };
@@ -108,6 +124,7 @@ export const monthHelpers = ({ daysNames, monthsNames, events }) => {
       const totalDays = getNumberOfDaysInAMonth(currentMonth, year);
 
       const generatedDays = generateDays({
+        events,
         year,
         month,
         format,
@@ -147,6 +164,7 @@ export const monthHelpers = ({ daysNames, monthsNames, events }) => {
       const nextMonthOffset = gridOf - totalOffsetDays - totalDays;
 
       const generatedDays = generateDays({
+        events,
         year: currentYear,
         month: followingMonth,
         format,

@@ -49,6 +49,16 @@ const ToolbarNav = styled.div`
   font-size: 12px;
 `;
 
+const events = [
+  { start: new Date(2020, 5, 5, 3, 24, 0), name: 'event name' },
+  { start: new Date(2020, 5, 8, 3, 24, 0), name: 'event name' },
+  { start: new Date(2020, 5, 10, 3, 24, 0), name: 'event name' },
+  { start: new Date(2020, 5, 10, 3, 24, 0), name: 'event name' },
+  { start: new Date(2020, 5, 10, 3, 24, 0), name: 'event name' },
+  { start: new Date(2020, 5, 17, 3, 24, 0), name: 'event name' },
+  { start: new Date(2020, 5, 27), end: new Date(2020, 5, 30), name: '@kobra' },
+];
+
 export const Calendar = () => {
   const {
     days,
@@ -58,8 +68,8 @@ export const Calendar = () => {
     addCalendarMonth,
     subCalendarMonth,
     reset,
-  } = useCalendarTools();
-  console.log(days);
+  } = useCalendarTools({ events });
+
   return (
     <div>
       <CalendarToolbar>
@@ -73,13 +83,20 @@ export const Calendar = () => {
         </ToolbarNav>
       </CalendarToolbar>
       <StyledGrid>
-        {Object.values(days).map((day, index) => {
+        {days.map((day, index) => {
           return (
             <GridItem key={index} isWeekend={day.weekend}>
               {daysNames[index] && (
                 <DayName>{daysNames[index].slice(0, 3)}</DayName>
               )}
               <DayNumber isOffset={day.offset}>{day.day}</DayNumber>
+              {day.events && day.events.length ? (
+                <div style={{ display: 'flex', flexDirection: 'column' }}>
+                  {day.events.map((evt, index) => (
+                    <div key={index}>{evt.name}</div>
+                  ))}
+                </div>
+              ) : null}
             </GridItem>
           );
         })}
