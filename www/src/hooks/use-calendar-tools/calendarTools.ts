@@ -1,10 +1,8 @@
 import { useReducer, useEffect, useCallback, useMemo } from 'react';
 import { uk } from 'date-fns/locale';
 import { days, months, EventProps } from './utils';
-import { monthHelpers, getFullMonth } from './monthHelpers';
+import { getFullMonth } from './monthHelpers';
 import {
-  getYear,
-  getMonth,
   addMonths,
   addYears,
   subYears,
@@ -49,11 +47,6 @@ export const calendarToolsReducer: ReducerProps<CalendarToolsState, Action> = (
   state,
   action,
 ) => {
-  const helpers = monthHelpers({
-    daysNames: state.daysNames,
-    monthsNames: state.monthsNames,
-  });
-
   switch (action.type) {
     case actionTypes.reset: {
       return {
@@ -200,7 +193,7 @@ export type CalendarToolsProps = {
   events: EventProps[];
   initialGridOf: number;
   initialDate: Date;
-  initialSelected: Date | null;
+  initialSelected: Date | Date[] | null;
 };
 
 export const useCalendarTools = (
