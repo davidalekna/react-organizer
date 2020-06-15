@@ -1,7 +1,7 @@
 import { useReducer, useEffect, useCallback, useMemo } from 'react';
 import { uk } from 'date-fns/locale';
 import { days, months, EventProps } from './utils';
-import { monthHelpers } from './monthHelpers';
+import { monthHelpers, getFullMonth } from './monthHelpers';
 import {
   getYear,
   getMonth,
@@ -71,64 +71,24 @@ export const calendarToolsReducer: ReducerProps<CalendarToolsState, Action> = (
       };
     }
     case actionTypes.getFullMonth: {
-      const { now, selected, gridOf } = state;
-      const { month: m, format, locale, events } = action.payload;
+      const { now, selected, gridOf, monthsNames, daysNames } = state;
+      const { month, format, locale, events } = action.payload;
 
-      // month index starts from 1
-      const month = m ? m : getMonth(now) + 1;
-      const year = getYear(now);
-
-      // TODO: figure out how to solve following 🙇🏼‍♂️🐑
-      // I believe that getPrevMonthOffset, getCurrentMonth and getNextMonthOffset
-      // should be outside functions because they should be re-usable
-
-      const firstOffset = helpers.getPrevMonthOffset({
-        month,
-        year,
-        format,
-        locale,
-        events,
-      });
-      const current = helpers.getCurrentMonth({
-        month,
-        year,
+      const nextState = getFullMonth({
+        now,
         selected,
-        format,
-        locale,
-        events,
-      }); // (-selected)
-      const nextOffset = helpers.getNextMonthOffset({
-        month,
-        year,
-        totalOffsetDays: firstOffset.totalOffsetDays,
-        totalDays: current.totalDays,
-        format,
-        locale,
         gridOf,
+        monthsNames,
+        daysNames,
+        month,
+        format,
+        locale,
         events,
       });
-
-      const result = [
-        ...Array.from(firstOffset.days.values()).reverse(),
-        ...Array.from(current.days.values()),
-        ...Array.from(nextOffset.days.values()),
-      ];
-
-      // if (eventsForMonth.length && events) {
-      //   // NOTE: cannot load async because it is used for render... bad architecture...
-      //   // convert into for of
-      //   result = result.map((day) => {
-      //     return Object.assign(day, {
-      //       events: initEventsForDate(eventsForMonth, day.date),
-      //     });
-      //   });
-      // }
-      // TODO END: move off to the SW
 
       return {
         ...state,
-        ...current,
-        days: result,
+        ...nextState,
       };
     }
     case actionTypes.addCalendarMonth: {

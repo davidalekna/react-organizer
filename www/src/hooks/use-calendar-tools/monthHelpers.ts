@@ -6,6 +6,8 @@ import {
   isAfter,
   toDate,
   isWithinInterval,
+  getMonth,
+  getYear,
 } from 'date-fns';
 import {
   getNumberOfWeeksInAMonth,
@@ -184,5 +186,62 @@ export const monthHelpers = ({ daysNames, monthsNames }) => {
         days: generatedDays,
       };
     },
+  };
+};
+
+export const getFullMonth = ({
+  daysNames,
+  monthsNames,
+  now,
+  selected,
+  gridOf,
+  month: m,
+  format,
+  locale,
+  events,
+}) => {
+  const helpers = monthHelpers({
+    daysNames,
+    monthsNames,
+  });
+
+  const month = m ? m : getMonth(now) + 1;
+  const year = getYear(now);
+
+  const firstOffset = helpers.getPrevMonthOffset({
+    month,
+    year,
+    format,
+    locale,
+    events,
+  });
+  const current = helpers.getCurrentMonth({
+    month,
+    year,
+    selected,
+    format,
+    locale,
+    events,
+  }); // (-selected)
+  const nextOffset = helpers.getNextMonthOffset({
+    month,
+    year,
+    totalOffsetDays: firstOffset.totalOffsetDays,
+    totalDays: current.totalDays,
+    format,
+    locale,
+    gridOf,
+    events,
+  });
+
+  const result = [
+    ...Array.from(firstOffset.days.values()).reverse(),
+    ...Array.from(current.days.values()),
+    ...Array.from(nextOffset.days.values()),
+  ];
+
+  return {
+    ...current,
+    days: result,
   };
 };
