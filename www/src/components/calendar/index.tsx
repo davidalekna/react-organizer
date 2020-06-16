@@ -4,12 +4,21 @@ import { useCalendarTools } from '../../hooks/use-calendar-tools';
 import { useState } from 'react';
 import { useEffect } from 'react';
 
-const StyledGrid = styled.div`
+const StyledYearGrid = styled.div`
+  position: relative;
+  width: 100%;
+  display: grid;
+  grid-gap: 20px;
+  grid-template-columns: repeat(4, 1fr);
+  grid-template-rows: repeat(3, auto);
+`;
+
+const StyledMonthGrid = styled.div`
   position: relative;
   width: 100%;
   display: grid;
   grid-template-columns: repeat(7, 1fr);
-  grid-auto-rows: 6rem;
+  grid-auto-rows: 2.5rem;
   border-left: 1px solid #ededed;
   border-top: 1px solid #ededed;
   user-select: none;
@@ -103,49 +112,63 @@ const OverlappingEvent = styled.div<any>`
 `;
 
 function MonthView({ items, daysNames, events }) {
-  return items.map((day, index) => {
-    return (
-      <StyledGrid>
-        {!events.length ? (
-          <LoadingEvents>Loading events...</LoadingEvents>
-        ) : null}
-        <GridItem key={index} isWeekend={day.weekend}>
-          {daysNames[index] && (
-            <DayName>{daysNames[index].slice(0, 3)}</DayName>
-          )}
-          <DayNumber isOffset={day.offset}>{day.day}</DayNumber>
-          {day.events && day.events.length ? (
-            <div
-              style={{
-                display: 'flex',
-                flexDirection: 'column',
-                width: '100%',
-              }}
-            >
-              {day.events.map((evt, index) => {
-                if (evt.end) {
+  return (
+    <StyledMonthGrid>
+      {!events.length ? <LoadingEvents>Loading events...</LoadingEvents> : null}
+      {items.map((day, index) => {
+        return (
+          <GridItem key={index} isWeekend={day.weekend}>
+            {daysNames[index] && (
+              <DayName>{daysNames[index].slice(0, 3)}</DayName>
+            )}
+            <DayNumber isOffset={day.offset}>{day.day}</DayNumber>
+            {day.events && day.events.length ? (
+              <div
+                style={{
+                  display: 'flex',
+                  flexDirection: 'column',
+                  width: '100%',
+                }}
+              >
+                {day.events.map((evt, index) => {
+                  if (evt.end) {
+                    return (
+                      <OverlappingEvent isOffset={day.offset} key={index}>
+                        {evt.title}
+                      </OverlappingEvent>
+                    );
+                  }
                   return (
-                    <OverlappingEvent isOffset={day.offset} key={index}>
+                    <DayEvent isOffset={day.offset} key={index}>
                       {evt.title}
-                    </OverlappingEvent>
+                    </DayEvent>
                   );
-                }
-                return (
-                  <DayEvent isOffset={day.offset} key={index}>
-                    {evt.title}
-                  </DayEvent>
-                );
-              })}
-            </div>
-          ) : null}
-        </GridItem>
-      </StyledGrid>
-    );
-  });
+                })}
+              </div>
+            ) : null}
+          </GridItem>
+        );
+      })}
+    </StyledMonthGrid>
+  );
 }
 
 function YearView({ items, daysNames }) {
-  return items.map((month, index) => <div key={index}>{month.name}</div>);
+  return (
+    <StyledYearGrid>
+      {items.map((month, index) => (
+        <div>
+          {month.name}
+          <MonthView
+            key={index}
+            items={month.items}
+            daysNames={daysNames}
+            events={[{}]}
+          />
+        </div>
+      ))}
+    </StyledYearGrid>
+  );
 }
 
 const eventsFromApi = [
@@ -169,15 +192,7 @@ export const Calendar = () => {
     subCalendarMonth,
     reset,
     view,
-  } = useCalendarTools({ events, view: 'year' });
-
-  console.log(items);
-
-  // useEffect(() => {
-  //   setTimeout(() => {
-  //     setEvents(eventsFromApi);
-  //   }, 3500);
-  // }, []);
+  } = useCalendarTools({ events, view: 'month' });
 
   useEffect(() => {
     fetch('https://www.gov.uk/bank-holidays.json')

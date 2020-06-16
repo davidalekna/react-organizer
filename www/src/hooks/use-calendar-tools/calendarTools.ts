@@ -35,10 +35,19 @@ export type Day = {
   today?: boolean;
 };
 
+export type Month = {
+  items: Day[];
+  month: number;
+  name: string;
+  totalDays: number;
+  totalWeeks: number;
+  year: number;
+};
+
 export type CalendarToolsState = {
   daysNames: string[];
   monthsNames: string[];
-  items: Day[] | any; // can hold days for month and months for year
+  items: Day[] | Month[];
   now: Date;
   selected: Date | null | any; // TODO: remove type `any`
   gridOf: number;
