@@ -1,7 +1,6 @@
 import { useReducer, useEffect, useCallback, useMemo } from 'react';
 import { uk } from 'date-fns/locale';
 import { days, months, EventProps } from './utils';
-import { getFullMonth } from './monthHelpers';
 import {
   addMonths,
   addYears,

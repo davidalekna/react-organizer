@@ -70,6 +70,7 @@ export const isDaySelected = (isSelected: Date, calendarDay: Date) => {
 export type EventProps = {
   start: Date;
   end?: Date;
+  calendar?: string;
   [key: string]: any;
 };
 
