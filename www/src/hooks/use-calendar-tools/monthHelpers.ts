@@ -118,7 +118,7 @@ export const monthHelpers = ({ daysNames, monthsNames }) => {
         year: currentYear,
         totalOffsetDays: generatedDays.size,
         // days: generatedDays.reverse(),
-        days: generatedDays,
+        items: generatedDays,
       };
     },
     getCurrentMonth({ selected, month, year, format, locale, events }) {
@@ -144,7 +144,7 @@ export const monthHelpers = ({ daysNames, monthsNames }) => {
         year,
         totalDays,
         totalWeeks: getNumberOfWeeksInAMonth(currentMonth, year).length,
-        days: generatedDays,
+        items: generatedDays,
       };
     },
     getNextMonthOffset({
@@ -183,7 +183,7 @@ export const monthHelpers = ({ daysNames, monthsNames }) => {
         month: followingMonth + 1,
         year: currentYear,
         totalOffsetDays: Object.keys(generatedDays).length,
-        days: generatedDays,
+        items: generatedDays,
       };
     },
   };
@@ -235,13 +235,13 @@ export const getFullMonth = ({
   });
 
   const result = [
-    ...Array.from(firstOffset.days.values()).reverse(),
-    ...Array.from(current.days.values()),
-    ...Array.from(nextOffset.days.values()),
+    ...Array.from(firstOffset.items.values()).reverse(),
+    ...Array.from(current.items.values()),
+    ...Array.from(nextOffset.items.values()),
   ];
 
   return {
     ...current,
-    days: result,
+    items: result,
   };
 };

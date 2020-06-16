@@ -102,6 +102,52 @@ const OverlappingEvent = styled.div<any>`
   background: #7d31b0;
 `;
 
+function MonthView({ items, daysNames, events }) {
+  return items.map((day, index) => {
+    return (
+      <StyledGrid>
+        {!events.length ? (
+          <LoadingEvents>Loading events...</LoadingEvents>
+        ) : null}
+        <GridItem key={index} isWeekend={day.weekend}>
+          {daysNames[index] && (
+            <DayName>{daysNames[index].slice(0, 3)}</DayName>
+          )}
+          <DayNumber isOffset={day.offset}>{day.day}</DayNumber>
+          {day.events && day.events.length ? (
+            <div
+              style={{
+                display: 'flex',
+                flexDirection: 'column',
+                width: '100%',
+              }}
+            >
+              {day.events.map((evt, index) => {
+                if (evt.end) {
+                  return (
+                    <OverlappingEvent isOffset={day.offset} key={index}>
+                      {evt.title}
+                    </OverlappingEvent>
+                  );
+                }
+                return (
+                  <DayEvent isOffset={day.offset} key={index}>
+                    {evt.title}
+                  </DayEvent>
+                );
+              })}
+            </div>
+          ) : null}
+        </GridItem>
+      </StyledGrid>
+    );
+  });
+}
+
+function YearView({ items, daysNames }) {
+  return items.map((month, index) => <div key={index}>{month.name}</div>);
+}
+
 const eventsFromApi = [
   { start: new Date(2020, 5, 5, 3, 24, 0), title: 'Event name' },
   { start: new Date(2020, 5, 8, 3, 24, 0), title: 'Event name' },
@@ -115,14 +161,17 @@ const eventsFromApi = [
 export const Calendar = () => {
   const [events, setEvents] = useState([]);
   const {
-    days,
+    items,
     daysNames,
     getCurrentMonthName,
     getCurrentYearName,
     addCalendarMonth,
     subCalendarMonth,
     reset,
-  } = useCalendarTools({ events });
+    view,
+  } = useCalendarTools({ events, view: 'year' });
+
+  console.log(items);
 
   // useEffect(() => {
   //   setTimeout(() => {
@@ -159,45 +208,10 @@ export const Calendar = () => {
           <button onClick={addCalendarMonth}>next</button>
         </ToolbarNav>
       </CalendarToolbar>
-      <StyledGrid>
-        {!events.length ? (
-          <LoadingEvents>Loading events...</LoadingEvents>
-        ) : null}
-        {days.map((day, index) => {
-          return (
-            <GridItem key={index} isWeekend={day.weekend}>
-              {daysNames[index] && (
-                <DayName>{daysNames[index].slice(0, 3)}</DayName>
-              )}
-              <DayNumber isOffset={day.offset}>{day.day}</DayNumber>
-              {day.events && day.events.length ? (
-                <div
-                  style={{
-                    display: 'flex',
-                    flexDirection: 'column',
-                    width: '100%',
-                  }}
-                >
-                  {day.events.map((evt, index) => {
-                    if (evt.end) {
-                      return (
-                        <OverlappingEvent isOffset={day.offset} key={index}>
-                          {evt.title}
-                        </OverlappingEvent>
-                      );
-                    }
-                    return (
-                      <DayEvent isOffset={day.offset} key={index}>
-                        {evt.title}
-                      </DayEvent>
-                    );
-                  })}
-                </div>
-              ) : null}
-            </GridItem>
-          );
-        })}
-      </StyledGrid>
+      {view === 'month' && (
+        <MonthView events={events} items={items} daysNames={daysNames} />
+      )}
+      {view === 'year' && <YearView items={items} daysNames={daysNames} />}
     </div>
   );
 };

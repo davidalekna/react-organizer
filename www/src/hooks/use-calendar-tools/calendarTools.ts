@@ -12,6 +12,10 @@ import {
   toDate,
   subMonths,
 } from 'date-fns';
+import { DateTimeGenerator } from './helpers';
+
+// QUESTION: should I keep month / year in state or just functions that return values
+// and can be consumed trough various hooks?
 
 // NOTE: convert days of the months to be stored in an object instead of arrays. That should
 // give a boost on a performance when events assigned.
@@ -34,11 +38,12 @@ export type Day = {
 export type CalendarToolsState = {
   daysNames: string[];
   monthsNames: string[];
-  days: Day[];
+  items: Day[] | any; // can hold days for month and months for year
   now: Date;
   selected: Date | null | any; // TODO: remove type `any`
   gridOf: number;
   events: EventProps[];
+  view: 'month' | 'year';
 };
 
 export type Action = { type: string; payload?: any };
@@ -67,7 +72,47 @@ export const calendarToolsReducer: ReducerProps<CalendarToolsState, Action> = (
       const { now, selected, gridOf, monthsNames, daysNames } = state;
       const { month, format, locale, events } = action.payload;
 
-      const nextState = getFullMonth({
+      // const nextState = getFullMonth({
+      //   now,
+      //   selected,
+      //   gridOf,
+      //   monthsNames,
+      //   daysNames,
+      //   month,
+      //   format,
+      //   locale,
+      //   events,
+      // });
+
+      const generator = new DateTimeGenerator({
+        now,
+        selected,
+        gridOf,
+        monthsNames,
+        daysNames,
+        month,
+        format,
+        locale,
+        events,
+      });
+
+      const nextState = generator.getFullMonth({
+        now,
+        selected,
+        gridOf,
+        month,
+      });
+
+      return {
+        ...state,
+        ...nextState,
+      };
+    }
+    case actionTypes.getFullYear: {
+      const { now, selected, gridOf, monthsNames, daysNames } = state;
+      const { month, format, locale, events } = action.payload;
+
+      const generator = new DateTimeGenerator({
         now,
         selected,
         gridOf,
@@ -81,7 +126,7 @@ export const calendarToolsReducer: ReducerProps<CalendarToolsState, Action> = (
 
       return {
         ...state,
-        ...nextState,
+        items: [...generator.getFullYear()].slice(0, -1),
       };
     }
     case actionTypes.addCalendarMonth: {
@@ -171,6 +216,7 @@ export const calendarToolsReducer: ReducerProps<CalendarToolsState, Action> = (
 
 export const actionTypes = {
   getFullMonth: 'getFullMonth',
+  getFullYear: 'getFullYear',
   addCalendarMonth: 'addCalendarMonth',
   subCalendarMonth: 'subCalendarMonth',
   addCalendarYear: 'addCalendarYear',
@@ -191,9 +237,10 @@ export type CalendarToolsProps = {
   daysNames: string[];
   monthsNames: string[];
   events: EventProps[];
-  initialGridOf: number;
+  numberOfGridItems: number;
   initialDate: Date;
   initialSelected: Date | Date[] | null;
+  view?: 'month' | 'year';
 };
 
 export const useCalendarTools = (
@@ -203,9 +250,10 @@ export const useCalendarTools = (
     daysNames = days,
     monthsNames = months,
     events = [],
-    initialGridOf = 42,
+    numberOfGridItems = 42,
     initialDate = toDate(new Date()),
     initialSelected = null,
+    view = 'month',
   }: Partial<CalendarToolsProps> = {},
   reducer = calendarToolsReducer,
 ) => {
@@ -214,16 +262,21 @@ export const useCalendarTools = (
   const [state, send] = useReducer(reducer, {
     daysNames,
     monthsNames,
-    days: [],
-    gridOf: initialGridOf,
+    items: [],
+    gridOf: numberOfGridItems,
     now: initialDate,
     selected: initialSelected,
     events: memoEvents,
+    view,
   });
 
   useEffect(() => {
-    getFullMonth({ month: state.now.getMonth(), events: memoEvents });
-  }, [state.now, memoEvents]);
+    if (state.view === 'month') {
+      getFullMonth({ month: state.now.getMonth(), events: memoEvents });
+    } else if (state.view === 'year') {
+      getFullYear();
+    }
+  }, [state.view, state.now, memoEvents]);
 
   const changeLanguage = ({ days, months }: any) => {
     send({ type: actionTypes.changeLanguage, payload: { days, months } });
@@ -237,13 +290,7 @@ export const useCalendarTools = (
   };
 
   const getFullYear = () => {
-    // ERROR: this function wont work!! Look above...
-    const months: any = [];
-    for (let i = 0; i < 13; i += 1) {
-      months.push(getFullMonth({ month: i, events }));
-    }
-    months.shift();
-    return months;
+    send({ type: actionTypes.getFullYear, payload: { month: 5, events: [] } });
   };
 
   const addCalendarMonth = () => {
